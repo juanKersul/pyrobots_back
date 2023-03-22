@@ -1,0 +1,12 @@
+src/__pycache__/main.cpython-310.pyc
+src/crud/__pycache__/__init__.cpython-310.pyc
+src/crud/__pycache__/user_services.cpython-310.pyc
+src/db/pyrobots.bd
+src/db/__pycache__/__init__.cpython-310.pyc
+src/db/__pycache__/database.cpython-310.pyc
+src/models/__pycache__/__init__.cpython-310.pyc
+src/models/__pycache__/entities.cpython-310.pyc
+src/routers/__pycache__/__init__.cpython-310.pyc
+src/routers/__pycache__/users_controller.cpython-310.pyc
+src/schemas/__pycache__/__init__.cpython-310.pyc
+src/schemas/__pycache__/iuser.cpython-310.pyc

@@ -1,19 +1,8 @@
-from models.entities import User
+from db.entities import User
 from pony.orm import db_session, commit
 from schemas.iuser import User_create
-from cryptography.fernet import Fernet
-import jwt
-from datetime import datetime, timedelta
-from decouple import config
+from datetime import datetime
 import random
-
-
-# se obtienen de env
-JWT_SECRET = config("secret")
-JWT_ALGORITHM = config("algorithm")
-JWT_EXPIRES = timedelta(1)
-KEY_CRYPT = config("KEY")
-
 
 @db_session()
 def add_user(new_user: User_create):
@@ -117,76 +106,6 @@ def search_user_by_email(input_email):
     """
     data = User.select(lambda p: p.email == input_email).get()
     return data
-
-
-# FUNCIONES AUXILIARES
-
-def get_payload(userID: str):
-    """Encodea el token.
-
-    Args:
-        userID (str): id del usuario.
-
-    Returns:
-        Dict[str,str]: {"id_usuario":"fecha de expiración"}
-    """
-    payload = {"userID": userID, "expiry": str(datetime.now() + JWT_EXPIRES)}
-    return payload
-
-
-def sign_JWT(userID: str):
-    payload = get_payload(userID)
-    token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
-    return token
-
-
-# esta funcion decodea el token
-def decode_JWT(token: str):
-    """Decodea el token
-
-    Args:
-        token (str): token
-
-    Returns:
-        Dict[str, Any]: {"userID": "", "expiry": 0}
-    """
-    try:
-        decode_token = jwt.decode(token, JWT_SECRET, algorithms=JWT_ALGORITHM)
-        return decode_token
-    except:
-        return {"userID": "", "expiry": 0}
-
-
-def decrypt_password(password: str):
-    """Desencripta una contraseña
-
-    Args:
-        password (str): contraseña a desencriptar
-
-    Returns:
-        str: contraseña desencriptada
-    """
-    f = Fernet(KEY_CRYPT)
-    encoded_pasword = password.encode()
-    decripted_password = f.decrypt(encoded_pasword)
-    decoded_password = decripted_password.decode()
-    return decoded_password
-
-
-def encrypt_password(password: str):
-    """Realiza un encriptado simetrico a un string haciendo uso de Fernet
-
-    Args:
-        password (str): String a encriptar
-
-    Returns:
-        _type_: String encriptada
-    """
-    f = Fernet(KEY_CRYPT)
-    encoded_pasword = password.encode()
-    encripted_password = f.encrypt(encoded_pasword)
-    decoded_password = encripted_password.decode()
-    return decoded_password
 
 @db_session
 def store_user_avatar(token,file):

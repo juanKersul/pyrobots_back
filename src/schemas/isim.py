@@ -3,7 +3,7 @@ from typing import Set
 from pydantic import BaseModel, validator
 import re
 
-from models.entities import User, Robot
+from db.entities import User, Robot
 from crud import simulation_service as sc
 
 

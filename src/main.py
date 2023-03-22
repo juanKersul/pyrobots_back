@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from db.database import gen_map
-from models.entities import User, Robot, Match
+from db.entities import User, Robot, Match
 from routers.users_controller import user_end_points
 from routers.match_controller import match_end_points
 from routers.simulation_controller import simulation_end_points

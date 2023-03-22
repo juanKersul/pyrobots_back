@@ -3,7 +3,7 @@ from typing import Set
 from pydantic import BaseModel, validator
 import re
 
-from models.entities import User
+from db.entities import User
 
 
 class MatchBase(BaseModel):

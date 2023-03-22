@@ -1,6 +1,6 @@
 from pony.orm import db_session, commit, select
 
-from models.entities import Match, User, Robot
+from db.entities import Match, User, Robot
 
 
 @db_session

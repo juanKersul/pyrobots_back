@@ -1,6 +1,8 @@
 from cryptography.fernet import Fernet
 from decouple import config
+
 KEY_CRYPT = config("KEY")
+
 
 def decrypt_password(password: str):
     """Desencripta una contraseña

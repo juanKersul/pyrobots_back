@@ -13,7 +13,9 @@ class ConnectionManager:
         self.active_connections: Dict[int, Dict[str, WebSocket]] = {}
         self.in_match: Dict[int, Dict[str, str]] = {}
 
-    async def connect(self, websocket: WebSocket, id_game: int, tkn: str, id_robot:int):
+    async def connect(
+        self, websocket: WebSocket, id_game: int, tkn: str, id_robot: int
+    ):
         msg = add_player(id_game, tkn, id_robot)
         user_name = msg.split(":")[0]
         try:
@@ -29,27 +31,32 @@ class ConnectionManager:
             broadcast_msg = ""
             it = 0
             for user in list(self.in_match[id_game].keys()):
-                if (it > 0):
+                if it > 0:
                     broadcast_msg = broadcast_msg + ", "
                 broadcast_msg = broadcast_msg + self.in_match[id_game][user]
                 it += 1
-            await self.broadcast_json(id_game,{"join": broadcast_msg })
+            await self.broadcast_json(id_game, {"join": broadcast_msg})
             # await for messages and send messages
             while True and websocket.client_state == WebSocketState.CONNECTED:
                 print("ENTRE")
                 data = await websocket.receive_json()
-                if data == {"connection": "close"} and user_name != list(self.in_match[id_game].keys())[0]:
+                if (
+                    data == {"connection": "close"}
+                    and user_name != list(self.in_match[id_game].keys())[0]
+                ):
                     remove_player(id_game, id_robot, user_name)
                     await self.disconnect(id_game, user_name, websocket)
                     await self.broadcast_json(id_game, {"leave": msg})
                     break
                 else:
-                    await self.send_personal_json({"Error": "No puedes abandonar la partida"}, websocket)
+                    await self.send_personal_json(
+                        {"Error": "No puedes abandonar la partida"}, websocket
+                    )
         except Exception or RuntimeError:
-            if (websocket.client_state == WebSocketState.CONNECTED):
+            if websocket.client_state == WebSocketState.CONNECTED:
                 await websocket.send_json({"status": "Cerrada - " + msg})
             try:
-                if (user_name in list(self.active_connections[id_game].keys())):
+                if user_name in list(self.active_connections[id_game].keys()):
                     await self.disconnect(id_game, user_name, websocket)
             except KeyError:
                 print("Partida Eliminada")

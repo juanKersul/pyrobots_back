@@ -1,22 +1,22 @@
 from db.entities import User
 from pony.orm import db_session, commit
 import random
+from pony.orm import ObjectNotFound
 
 
 @db_session()
-def add_user(
-    new_username,
-    new_password_encripted,
-    new_email,
-):
-    """Agrega un usuario a la base de datos, devolviendo un
-    mensaje representativo del estado de la salida
-    Args:
-        new_user (User_create): Usuario a persistir
-    Returns:
-        str: representativa del estado de la salida
+def add_user(new_username, new_password_encripted, new_email):
     """
-    code_for_validation = "".join(random.sample(new_password_encripted[7:13], 6))
+    Agrega un usuario a la base de datos, devolviendo un mensaje representativo
+      del estado de la salida
+
+    Args:
+    new_user (User_create): Usuario a persistir
+
+    Returns:
+    str: Un mensaje representativo del estado de la salida.
+    """
+    validation_code = "".join(random.sample(new_password_encripted[7:13], 6))
     with db_session:
         try:
             User(
@@ -24,7 +24,7 @@ def add_user(
                 password=new_password_encripted,
                 confirmation_mail=False,
                 email=new_email,
-                validation_code=code_for_validation,
+                validation_code=validation_code,
                 avatar="default.jpeg",
             )
             commit()
@@ -44,18 +44,18 @@ def update_confirmation(username: str, code: str):
         str: String representativa del estado de la salida
     """
     try:
-        user_for_validate = User[username]
+        user_for_validate = User[username]  # type: ignore
     except Exception as e:
         return str(e) + " no existe"
-    if (
+    if not (
         code == user_for_validate.validation_code
-        and user_for_validate.confirmation_mail == False
+        and user_for_validate.confirmation_mail
     ):
         user_for_validate.confirmation_mail = True
         return "Usuario confirmado con exito"
     elif (
         code == user_for_validate.validation_code
-        and user_for_validate.confirmation_mail == True
+        and user_for_validate.confirmation_mail
     ):
         return "Intento volver a confirmar"
     return "El codigo de confirmacion no es valido"
@@ -103,7 +103,16 @@ def search_user_by_email(input_email):
 
 
 @db_session
-def store_user_avatar(username, file):
+def store_user_avatar(username: str, file: str):
+    """_summary_
+
+    Args:
+        username (_type_): _description_
+        file (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
     with db_session:
         try:
             new_filename = file.filename.split(".")
@@ -111,7 +120,7 @@ def store_user_avatar(username, file):
             file.filename = "".join(new_filename)
             User[username].avatar = file.filename
             return "todo bien"
-        except:
+        except ObjectNotFound:
             return "username invalido"
 
 
@@ -121,5 +130,5 @@ def get_user_from_db(username):
         try:
             res = User[username]
             return res
-        except:
+        except ObjectNotFound:
             return "username invalido"

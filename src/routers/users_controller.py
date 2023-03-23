@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException,UploadFile
+from fastapi import APIRouter, HTTPException, UploadFile
 from starlette.responses import RedirectResponse
 from crud.user_services import (
     add_user,
@@ -10,13 +10,14 @@ from crud.user_services import (
     decrypt_password,
     store_user_avatar,
     decode_JWT,
-    get_user_from_db
+    get_user_from_db,
 )
 from schemas.iuser import User_base, User_login_schema
 from crud.robot_service import add_default_robot
 import shutil
 from datetime import datetime
 import base64
+
 user_end_points = APIRouter()
 
 
@@ -50,10 +51,7 @@ async def user_login(credentials: User_login_schema):
         if not password_is_correct:
             raise HTTPException(status_code=400, detail="contrasenia incorrecta")
         elif not mail_is_verificated:
-            raise HTTPException(
-                status_code=400,
-                detail="email no verificado"
-                )
+            raise HTTPException(status_code=400, detail="email no verificado")
         else:
             response = sign_JWT(credentials.username)
             return {"token": response}
@@ -75,27 +73,18 @@ async def user_register(user_to_add: User_base):
         dict[str, str]: {"Status": msg}
     """
     msg = add_user(new_user=user_to_add)
-    if ('IntegrityError' in msg and 'username' in msg):
-        raise HTTPException(
-            status_code=409,
-            detail="El nombre de usuario ya existe"
-            )
-    if ('IntegrityError' in msg and 'email' in msg):
-        raise HTTPException(
-            status_code=409,
-            detail="El email ya existe"
-            )
+    if "IntegrityError" in msg and "username" in msg:
+        raise HTTPException(status_code=409, detail="El nombre de usuario ya existe")
+    if "IntegrityError" in msg and "email" in msg:
+        raise HTTPException(status_code=409, detail="El email ya existe")
     code_validation = get_code_for_user(user_to_add.username)
     if "no existe" in code_validation:
         raise HTTPException(
-            status_code=400,
-            detail="El usuario "+user_to_add.username+" no existe"
-            )
-    await send_confirmation_mail(
-        user_to_add.email,
-        code_validation,
-        user_to_add.username
+            status_code=400, detail="El usuario " + user_to_add.username + " no existe"
         )
+    await send_confirmation_mail(
+        user_to_add.email, code_validation, user_to_add.username
+    )
     return {"Status": msg}
 
 
@@ -117,40 +106,39 @@ def user_verification(username: str, code: str):
     msg = update_confirmation(username, code)
     if "no existe" in msg:
         raise HTTPException(
-            status_code=400,
-            detail="El usuario "+username+" no existe"
-            )
+            status_code=400, detail="El usuario " + username + " no existe"
+        )
     if msg == "El codigo de confirmacion no es valido":
-        raise HTTPException(
-            status_code=400,
-            detail=msg
-            )
-    if (msg == "Usuario confirmado con exito"):       
+        raise HTTPException(status_code=400, detail=msg)
+    if msg == "Usuario confirmado con exito":
         add_default_robot(username)
-    response = RedirectResponse(url='http://localhost:3000/home/login')
+    response = RedirectResponse(url="http://localhost:3000/home/login")
     return response
 
+
 @user_end_points.post("/ReplaceUserImage")
-async def replace_user_image(token:str,file:UploadFile):
-    res =store_user_avatar(token,file)
-    if res != "token invalido": 
+async def replace_user_image(token: str, file: UploadFile):
+    res = store_user_avatar(token, file)
+    if res != "token invalido":
         store_Userimg(file)
         return {"imagen guardada con exito"}
     else:
-        raise HTTPException(status_code=400,detail="token invalido")
+        raise HTTPException(status_code=400, detail="token invalido")
+
 
 def store_Userimg(file: UploadFile):
     file.file.seek(0)
     with open("routers/users/avatars/" + file.filename, "wb+") as upload_folder:
         shutil.copyfileobj(file.file, upload_folder)
 
+
 @user_end_points.get("/GetUser")
 def get_user(token):
     user = get_user_from_db(token)
-    if (user != "token invalido"):
-        path = "routers/users/avatars/"+str(user.avatar)
-        with open(path, 'rb') as f:
+    if user != "token invalido":
+        path = "routers/users/avatars/" + str(user.avatar)
+        with open(path, "rb") as f:
             base64image = base64.b64encode(f.read())
-        return {"username":user.username,"email":user.email,"avatar":base64image}
+        return {"username": user.username, "email": user.email, "avatar": base64image}
     else:
-        raise HTTPException(status_code=400,detail="token invalido")
+        raise HTTPException(status_code=400, detail="token invalido")

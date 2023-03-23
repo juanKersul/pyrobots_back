@@ -55,7 +55,9 @@ async def start_match(id_match: int, token: str):
     in_match = list(manager.active_connections[id_match].keys())
     in_match.reverse()
     for users in in_match:
-        await manager.disconnect(id_match, users, manager.active_connections[id_match][users])
+        await manager.disconnect(
+            id_match, users, manager.active_connections[id_match][users]
+        )
     match_service.delete_match(id_match)
     return ganador
 

@@ -7,6 +7,7 @@ JWT_SECRET = config("secret")
 JWT_ALGORITHM = config("algorithm")
 JWT_EXPIRES = timedelta(1)
 
+
 def get_payload(userID: str):
     """Encodea el token.
 

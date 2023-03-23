@@ -3,8 +3,8 @@ from db.database import db
 
 
 class User(db.Entity):
-    """Crea la tabla de usuarios.
-    """
+    """Crea la tabla de usuarios."""
+
     __table__ = "users"
     username = PrimaryKey(str, 40)
     password = Required(str, 200)
@@ -21,8 +21,8 @@ class User(db.Entity):
 
 
 class Robot(db.Entity):
-    """Crea la tabla de robots.
-    """
+    """Crea la tabla de robots."""
+
     __table__ = "robots"
     id = PrimaryKey(int, auto=True)
     name = Required(str, unique=True)
@@ -34,8 +34,8 @@ class Robot(db.Entity):
 
 
 class Match(db.Entity):
-    """Crea la tabla de partidas.
-    """
+    """Crea la tabla de partidas."""
+
     id = PrimaryKey(int, auto=True)
     name = Required(str, unique=True)
     max_players = Optional(int)

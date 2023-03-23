@@ -10,7 +10,7 @@ from random import randint
 simulation_end_points = APIRouter()
 
 
-def game(robots:list, rounds):
+def game(robots: list, rounds):
     """Ejecuta un juego
 
     Args:
@@ -47,15 +47,12 @@ async def create_simulation(simulation: isim.SimulationCreate):
     robots = []
     for x in id_robot_parsed:
         file = get_file_by_id(x)
-        if(("default1" in file)):
+        if "default1" in file:
             file = "default1.py"
-        elif("default2" in file):
+        elif "default2" in file:
             file = "default2.py"
-        
-        filename = (
-            "routers/robots/"
-            + file
-        )
+
+        filename = "routers/robots/" + file
         try:
             exec(
                 open(filename).read(),
@@ -72,7 +69,7 @@ async def create_simulation(simulation: isim.SimulationCreate):
             robots.append(r)
 
     # for i in range(simulation.n_rounds_simulations):
-    outer_response = game(robots,simulation.n_rounds_simulations)
+    outer_response = game(robots, simulation.n_rounds_simulations)
     for i in outer_response:
         k = 0
         for j in i:

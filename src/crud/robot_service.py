@@ -2,8 +2,9 @@ from pony.orm import db_session, commit, select
 from db.entities import Robot
 from schemas import irobot
 
+
 @db_session
-def add_robot(avatar_file: str,robot_name: str):
+def add_robot(avatar_file: str, robot_name: str):
     """Agregar robot a la base de datos.
     Args:
         config_file (UploadFile): Archivo '.py' del robot.
@@ -19,8 +20,8 @@ def add_robot(avatar_file: str,robot_name: str):
     with db_session:
         try:
             if avatar_file != "default.jpeg":
-                avatar_file = avatar_file[1:].split('.')
-                avatar_file[0] =  username + "_" + robot_name + '.'
+                avatar_file = avatar_file[1:].split(".")
+                avatar_file[0] = username + "_" + robot_name + "."
                 avatar_file = "".join(avatar_file)
             Robot(
                 name=robot_name + "_" + username,
@@ -28,7 +29,7 @@ def add_robot(avatar_file: str,robot_name: str):
                 matchs_pleyed=0,
                 matchs_won=0,
                 avg_life_time=0,
-                user_owner= username,
+                user_owner=username,
             )
             commit()
         except Exception as e:
@@ -84,7 +85,7 @@ def add_default_robot(username: str):
             matchs_won=0,
             avg_life_time=0,
             user_owner=username,
-            avatar = "default.jpeg"
+            avatar="default.jpeg",
         )
         commit()
         Robot(
@@ -93,16 +94,17 @@ def add_default_robot(username: str):
             matchs_won=0,
             avg_life_time=0,
             user_owner=username,
-            avatar = "default.jpeg"
+            avatar="default.jpeg",
         )
         commit()
 
+
 @db_session
-def get_image_name(username,id):
+def get_image_name(username, id):
     with db_session:
         try:
             res = Robot[id]
-            if (res.user_owner.username == username):
+            if res.user_owner.username == username:
                 return res.avatar
             else:
                 return "default.jpeg"

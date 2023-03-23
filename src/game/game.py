@@ -1,9 +1,13 @@
 from math import sqrt
-from routers.robot.robot_class import Robot
+from robot_class import Robot
+
+
 def distance(t1: tuple, t2: tuple):
-    res = round(sqrt((t2[0]-t1[0])**2 + (t2[1]-t1[1])**2))
-    return res 
-#asdasd
+    res = round(sqrt((t2[0] - t1[0]) ** 2 + (t2[1] - t1[1]) ** 2))
+    return res
+
+
+# asdasd
 def danio_misil(robot_position: tuple, misil_position: tuple):
     if misil_position == (None, None):
         danio = 0
@@ -34,7 +38,7 @@ def danio_pared(pos_r: tuple):
     return danio
 
 
-def inflingir_danio(robot,other_robots):
+def inflingir_danio(robot, other_robots):
     """Inflinge daño a robots.
 
     Args:
@@ -42,29 +46,28 @@ def inflingir_danio(robot,other_robots):
         other_robots (Any): Robots a los que dañar.
     """
 
-    if(robot.current_damage>0):
+    if robot.current_damage > 0:
         danio_p = danio_pared(robot.current_position)
         robot.current_damage -= danio_p
-    
+
     for robot_check in other_robots:
-        danio_c = danio_colision(
-            robot.current_position, robot_check.current_position
-        )
-        if (robot.current_damage>0):
+        danio_c = danio_colision(robot.current_position, robot_check.current_position)
+        if robot.current_damage > 0:
             robot.current_damage -= danio_c
-        if (robot_check.current_damage>0):    
+        if robot_check.current_damage > 0:
             robot_check.current_damage -= danio_c
-    
+
     for robot_x in other_robots:
         # Revisar daño por misil
-        if (robot.current_velocity < 80 and robot.current_damage>0):
+        if robot.current_velocity < 80 and robot.current_damage > 0:
             danio2 = danio_misil(robot.current_position, robot_x.misil_position)
             robot.current_damage -= danio2
-    
-    if(robot.current_damage<0):
+
+    if robot.current_damage < 0:
         robot.current_damage = 0
-        
-def avanzar_ronda(robots:list):
+
+
+def avanzar_ronda(robots: list):
     """Avanza de ronda
 
     Args:
@@ -74,41 +77,41 @@ def avanzar_ronda(robots:list):
         List[]: Resultado de rondas
     """
     results_by_robots = []
-    
+
     for robot in robots:
         other_robots = robots.copy()
         other_robots.remove(robot)
-        
-        inflingir_danio(robot,other_robots)
-    
-    #respond
+
+        inflingir_danio(robot, other_robots)
+
+    # respond
     for robot in robots:
         if robot.current_damage > 0:
             try:
                 robot.respond()
             except:
                 pass
-    #scan
+    # scan
     for robot in robots:
-       if robot.current_damage > 0:
-           other_robots = robots.copy()
-           other_robots.remove(robot)
-           fun = lambda x : True if x.current_damage >0 else False
-           other_robots = filter(fun,other_robots)
-           scan_list = [r.current_position for r in other_robots]
-           robot._scan(scan_list)
-    #atack
+        if robot.current_damage > 0:
+            other_robots = robots.copy()
+            other_robots.remove(robot)
+            fun = lambda x: True if x.current_damage > 0 else False
+            other_robots = filter(fun, other_robots)
+            scan_list = [r.current_position for r in other_robots]
+            robot._scan(scan_list)
+    # atack
     for robot in robots:
         if robot.current_damage > 0:
             robot._shoot()
         else:
-            robot.misil_position = (None,None)
-    #move
+            robot.misil_position = (None, None)
+    # move
     for robot in robots:
         if robot.current_damage > 0:
             robot.last_position = robot.current_position
             robot._move()
-    #generate json
+    # generate json
     for robot in robots:
         if robot.current_damage > 0:
             result_round = {
@@ -144,8 +147,9 @@ def avanzar_ronda(robots:list):
                 "ymisf": None,
             }
             results_by_robots.append(result_round)
-    
+
     return results_by_robots
+
 
 def parse_robots(robot_list: list):
     """Dado un arreglo de id de robots devuelve el comportamiento

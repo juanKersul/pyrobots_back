@@ -10,3 +10,4 @@ src/routers/__pycache__/__init__.cpython-310.pyc
 src/routers/__pycache__/users_controller.cpython-310.pyc
 src/schemas/__pycache__/__init__.cpython-310.pyc
 src/schemas/__pycache__/iuser.cpython-310.pyc
+.vscode/settings.json

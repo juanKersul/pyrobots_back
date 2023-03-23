@@ -28,23 +28,23 @@ class User_base(BaseModel):
         if len(password) > 50:
             raise ValueError("La longitud máxima es de 50 caracteres.")
         if password.islower() or password.isupper():
-            raise ValueError(
-                "Debe contener al menos una mayuscula y una minuscula")
+            raise ValueError("Debe contener al menos una mayuscula y una minuscula")
         if " " in password:
             raise ValueError("No debe contener espacios")
-        if not (re.search(r'\d', password)):
+        if not (re.search(r"\d", password)):
             raise ValueError("Debe contener al menos un numero")
         if not any(c in special_chars for c in password):
             raise ValueError("Debe contener al menos un caracter especial")
         return password
 
-    @validator('email')
+    @validator("email")
     def email_validator(cls, email):
-        regex = r'[a-zA-Z0-9_.-]+[^!#$%^&*()]@(?:gmail'r'|hotmail|yahoo|live|mi.unc|outlook)\.(?:com|es|edu.ar)'
+        regex = (
+            r"[a-zA-Z0-9_.-]+[^!#$%^&*()]@(?:gmail"
+            r"|hotmail|yahoo|live|mi.unc|outlook)\.(?:com|es|edu.ar)"
+        )
         if not re.search(regex, email):
-            raise ValueError(
-                'Email invalido'
-            )
+            raise ValueError("Email invalido")
         return email
 
 

@@ -1,9 +1,10 @@
 from fastapi import APIRouter, HTTPException, UploadFile, File
 from crud import robot_service
-from crud.robot_service import add_robot,get_image_name
+from crud.robot_service import add_robot, get_image_name
 import shutil
 from typing import Optional
 import base64
+
 robot_end_points = APIRouter()
 
 
@@ -22,7 +23,12 @@ def store_avatar(file: UploadFile):
 
 @robot_end_points.post("/upload/robot")
 async def robot_upload(
-    *, config: UploadFile, avatar: Optional[UploadFile] = File(None), name: str, tkn: str):
+    *,
+    config: UploadFile,
+    avatar: Optional[UploadFile] = File(None),
+    name: str,
+    tkn: str
+):
     """Cargar Robot
 
     Args:
@@ -84,10 +90,11 @@ def read_robots(token: str):
         raise HTTPException(status_code=401, detail="No autorizado, debe logearse")
     return msg
 
+
 @robot_end_points.get("/image")
-def get_image(token,robot_id):
-    image_name = get_image_name(token,robot_id)
-    path = "routers/robots/avatars/"+image_name
-    with open(path, 'rb') as f:
+def get_image(token, robot_id):
+    image_name = get_image_name(token, robot_id)
+    path = "routers/robots/avatars/" + image_name
+    with open(path, "rb") as f:
         base64image = base64.b64encode(f.read())
     return base64image

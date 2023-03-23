@@ -1,17 +1,24 @@
 from pony.orm import db_session, commit, select
 from schemas import imatch
 from db.entities import Match, User, Robot
-from crud.user_services import encrypt_password
+from security.password import encrypt_password
+
 
 @db_session
-def create_match(user_creator:str,max_players:int,match_name:str,min_players:int,password:str,n_matchs:int,n_rounds:int):
-    """
-    crear una partida
-    """
+def create_match(
+    user_creator: str,
+    max_players: int,
+    match_name: str,
+    min_players: int,
+    password: str,
+    n_matchs: int,
+    n_rounds: int,
+):
+    """Crea una partida en la base de datos."""
     with db_session:
         try:
             Match(
-                name= match_name,
+                name=match_name,
                 max_players=abs(max_players),
                 min_players=abs(min_players),
                 password=encrypt_password(password),
@@ -58,6 +65,7 @@ def read_matchs():
         except Exception as e:
             return str(e)
     return result
+
 
 @db_session
 def read_match(id_match: int):
@@ -128,14 +136,18 @@ def read_player_in_game(username: str, id_match: int):
 
 
 @db_session
-def add_player(id_match: int, id_robot: int,username : str):
+def add_player(id_match: int, id_robot: int, username: str):
     result = ""
     with db_session:
         try:
             match = Match[id_match]
             user = User[username]
             robot = Robot[id_robot]
-            if match.user_creator == user and len(match.robots_in_match) == 0 and str(robot.name).split("_")[1] == username:
+            if (
+                match.user_creator == user
+                and len(match.robots_in_match) == 0
+                and str(robot.name).split("_")[1] == username
+            ):
                 list_robots = match.robots_in_match
                 list_robots.append(id_robot)
                 match.robots_in_match = list_robots
@@ -210,6 +222,7 @@ def start_game(id_match: int, name_user: str):
                 error = {"Status": "El usuario no existe"}
             return error
     return list(match_robots)
+
 
 @db_session
 def delete_match(id_match: int):

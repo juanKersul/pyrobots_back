@@ -1,5 +1,4 @@
 from fastapi import FastAPI
-from db.database import gen_map
 from db.entities import User, Robot, Match
 from routers.users_controller import user_end_points
 from routers.match_controller import match_end_points
@@ -21,7 +20,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-gen_map()
+# aca generar mapeo de base de datos
 app.include_router(user_end_points)
 app.include_router(match_end_points)
 app.include_router(robot_end_points)

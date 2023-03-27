@@ -2,6 +2,7 @@ from pony.orm import db_session, commit, select
 from schemas import imatch
 from db.entities import Match, User, Robot
 from security.password import encrypt_password
+from pony.orm import ObjectNotFound, OperationalError
 
 
 @db_session
@@ -14,7 +15,10 @@ def create_match(
     n_matchs: int,
     n_rounds: int,
 ):
-    """Crea una partida en la base de datos."""
+    """Crear Partida
+    Input: user_creator, max_players, match_name, min_players, password,
+      n_matchs, n_rounds
+    output: None"""
     with db_session:
         try:
             Match(
@@ -28,9 +32,8 @@ def create_match(
                 user_creator=user_creator,
             )
             commit()
-        except Exception as e:
-            return str(e)
-    return "added"
+        except OperationalError("fallo agregar partida"):
+            raise
 
 
 @db_session
@@ -61,10 +64,9 @@ def read_matchs():
                 }
                 for p in matchs
             ]
-            commit()
-        except Exception as e:
-            return str(e)
-    return result
+            return result
+        except ObjectNotFound("No hay partidas"):
+            raise
 
 
 @db_session
@@ -73,70 +75,84 @@ def read_match(id_match: int):
         try:
             match = Match[id_match]
             result = imatch.Match.from_orm(match)
-            commit()
-        except Exception as e:
-            return str(e)
-        return result
+            return result
+        except ObjectNotFound("no existe la partida"):
+            raise
 
 
 @db_session
 def get_match_id(match_name: str):
-    result = select(m.id for m in Match if m.name == match_name)
-    for i in result:
-        return i
+    try:
+        return select(m.id for m in Match if m.name == match_name)
+    except ObjectNotFound("no existe la partida"):
+        raise
 
 
 @db_session
 def get_match_max_players(match_id: int):
-    query = select(m.max_players for m in Match if m.id == match_id)
-    for i in query:
-        result = i
-    return result
+    try:
+        return select(m.max_players for m in Match if m.id == match_id)
+    except ObjectNotFound("no existe la partida"):
+        raise
 
 
 @db_session
 def get_match_min_players(match_id: int):
-    query = select(m.min_players for m in Match if m.id == match_id)
-    for i in query:
-        result = i
-    return result
+    try:
+        return select(m.min_players for m in Match if m.id == match_id)
+    except ObjectNotFound("no existe la partida"):
+        raise
 
 
 @db_session
 def get_match_rounds(match_id: int):
-    query = select(m.n_rounds_matchs for m in Match if m.id == match_id)
-    for i in query:
-        result = i
-    return result
+    try:
+        return select(m.n_rounds_matchs for m in Match if m.id == match_id)
+    except ObjectNotFound("no existe la partida"):
+        raise
 
 
 @db_session
 def get_match_games(match_id: int):
-    query = select(m.n_matchs for m in Match if m.id == match_id)
-    for i in query:
-        result = i
-    return result
+    try:
+        return select(m.n_matchs for m in Match if m.id == match_id)
+    except ObjectNotFound("no existe la partida"):
+        raise
 
 
 @db_session
 def read_match_players(id_match: int):
-    str_result = []
-    with db_session:
+    try:
+        str_result = []
         result = select(m.users for m in Match if m.id == id_match)
         for i in result:
             str_result.append(i.username)
         return str_result
+    except ObjectNotFound("no existe la partida"):
+        raise
 
 
 @db_session
 def read_player_in_game(username: str, id_match: int):
-    result = select(m.users for m in Match if m.id == id_match)
-
-    return username in result
+    try:
+        result = select(m.users.username for m in Match if m.id == id_match)
+        return username in result
+    except ObjectNotFound("no existe la partida"):
+        raise
 
 
 @db_session
 def add_player(id_match: int, id_robot: int, username: str):
+    """_summary_
+
+    Args:
+        id_match (int): _description_
+        id_robot (int): _description_
+        username (str): _description_
+
+    Returns:
+        _type_: _description_
+    """
     result = ""
     with db_session:
         try:

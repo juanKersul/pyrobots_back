@@ -43,13 +43,6 @@ def get_robot_avatar(id_robot):
 
 
 @db_session
-def get_robot_avatar(id_robot):
-    robots = select(r.avatar for r in Robot if r.id == id_robot)
-    for i in robots:
-        return i
-
-
-@db_session
 def get_robot_id(robot_name):
     robots = select(r.id for r in Robot if r.name == robot_name)
     for i in robots:

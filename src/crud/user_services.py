@@ -1,20 +1,18 @@
-from db.entities import User
+from src.db.entities import User
 from pony.orm import db_session, commit
 import random
-from pony.orm import ObjectNotFound
+from pony.orm import ObjectNotFound, OperationalError
 
 
 @db_session()
-def add_user(new_username, new_password_encripted, new_email):
+def add_user(new_username: str, new_password_encripted: str, new_email: str):
     """
-    Agrega un usuario a la base de datos, devolviendo un mensaje representativo
-      del estado de la salida
-
-    Args:
-    new_user (User_create): Usuario a persistir
-
+    Agrega un usuario a la base de datos
+    Args: new_username (str): Nombre de usuario
+          new_password_encripted (str): Contraseña encriptada
+          new_email (str): Email del usuario
     Returns:
-    str: Un mensaje representativo del estado de la salida.
+        bool: True si se agrego correctamente, False si no
     """
     validation_code = "".join(random.sample(new_password_encripted[7:13], 6))
     with db_session:
@@ -28,9 +26,8 @@ def add_user(new_username, new_password_encripted, new_email):
                 avatar="default.jpeg",
             )
             commit()
-        except Exception as e:
-            return str(e)
-        return "Usuario agregado con exito"
+        except OperationalError("el nombre de usuario ya existe"):
+            raise
 
 
 @db_session
@@ -44,21 +41,11 @@ def update_confirmation(username: str, code: str):
         str: String representativa del estado de la salida
     """
     try:
-        user_for_validate = User[username]  # type: ignore
-    except Exception as e:
-        return str(e) + " no existe"
-    if not (
-        code == user_for_validate.validation_code
-        and user_for_validate.confirmation_mail
-    ):
-        user_for_validate.confirmation_mail = True
-        return "Usuario confirmado con exito"
-    elif (
-        code == user_for_validate.validation_code
-        and user_for_validate.confirmation_mail
-    ):
-        return "Intento volver a confirmar"
-    return "El codigo de confirmacion no es valido"
+        user = User[username]
+        if not (code == user.validation_code and user.confirmation_mail):
+            user.confirmation_mail = True
+    except OperationalError("bad username or confirmation code"):
+        raise
 
 
 @db_session
@@ -73,33 +60,39 @@ def get_code_for_user(username: str):
     """
     try:
         code = User[username].validation_code
-    except Exception as e:
-        return str(e) + " no existe"
-    return code
+        return code
+    except ObjectNotFound("no existe el usuario"):
+        raise
 
 
 @db_session()
-def search_user(name):
+def search_user(name: str):
     """Busca un usuario en la base de datos por su nombre.
     Args:
         name (Any): nombre del usuario a buscar.
     Returns:
         Any: ??
     """
-    data = User.get(username=name)
-    return data
+    try:
+        data = User.get(username=name)
+        return data
+    except ObjectNotFound("no existe el usuario"):
+        raise
 
 
 @db_session
-def search_user_by_email(input_email):
+def search_user_by_email(input_email: str):
     """Busca un usuario en la base de datos por su email.
     Args:
         input_email (Any): email del usuario a buscar.
     Returns:
         Any: ??
     """
-    data = User.select(lambda p: p.email == input_email).get()
-    return data
+    try:
+        data = User.select(lambda p: p.email == input_email).get()
+        return data
+    except ObjectNotFound("no existe el usuario"):
+        raise
 
 
 @db_session
@@ -107,11 +100,8 @@ def store_user_avatar(username: str, file: str):
     """_summary_
 
     Args:
-        username (_type_): _description_
-        file (_type_): _description_
-
-    Returns:
-        _type_: _description_
+        username (str): nombre de usuario
+        file (str): nombre del archivo
     """
     with db_session:
         try:
@@ -119,16 +109,5 @@ def store_user_avatar(username: str, file: str):
             new_filename[0] = username + "."
             file.filename = "".join(new_filename)
             User[username].avatar = file.filename
-            return "todo bien"
-        except ObjectNotFound:
-            return "username invalido"
-
-
-@db_session
-def get_user_from_db(username):
-    with db_session:
-        try:
-            res = User[username]
-            return res
-        except ObjectNotFound:
-            return "username invalido"
+        except OperationalError("el usuario no existe"):
+            raise

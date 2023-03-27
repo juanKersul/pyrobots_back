@@ -1,9 +1,9 @@
 from math import sin, cos, pi, sqrt, degrees, atan2
 from decouple import config
 
-ACELERATION_FACTOR = int(config("aceleration"))
-MAX_VELOCITY = int(config("maxvelocity"))
-SPIN_FACTOR = int(config("spinFactor"))
+ACELERATION_FACTOR = 10
+MAX_VELOCITY = 100
+SPIN_FACTOR = 90
 
 
 class Robot:
@@ -318,22 +318,3 @@ def polar_to_rect(ang, distance, origin):
                 D = (999, 0)
             res = line_intersection((A, B), (C, D))
     return (res[0], res[1])
-
-
-def validate_file(filename: str, file: UploadFile):
-    """Validación de un archivo, i.e chequea extención '.py' y que el nombre del archivo sea usado dentro.
-
-    Args:
-        filename (str): Nombre de archivo a validar
-        file (UploadFile): Archivo a validar
-
-    Returns:
-        bool: True en caso de que sea válido.
-    """
-    content = file.file.read().decode()
-    is_valid = True
-    if filename + ".py" != file.filename:
-        is_valid = False
-    if not (filename in content):
-        is_valid = False
-    return is_valid

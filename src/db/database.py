@@ -1,11 +1,9 @@
 from pony.orm import Database
-
-db = Database()
-db.bind(provider="sqlite", filename="pyrobots.bd", create_db=True)
+from entities import define_entities
 
 
-def gen_map():
-    """
-    Asigna las entidades definidas a las tablas de la base de datos
-    """
+def define_database(**db_params):
+    db = Database(**db_params)
+    define_entities(db)
     db.generate_mapping(create_tables=True)
+    return db

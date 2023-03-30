@@ -1,8 +1,8 @@
 from pony.orm import db_session, commit, select
 from schemas import imatch
-from db.entities import Match, User, Robot
 from security.password import encrypt_password
 from pony.orm import ObjectNotFound, OperationalError
+from db.database import db
 
 
 @db_session
@@ -21,7 +21,7 @@ def create_match(
     output: None"""
     with db_session:
         try:
-            Match(
+            db.Match(
                 name=match_name,
                 max_players=abs(max_players),
                 min_players=abs(min_players),

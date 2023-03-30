@@ -1,5 +1,4 @@
 from pony.orm import db_session, select
-from db.entities import User, Robot
 
 
 @db_session

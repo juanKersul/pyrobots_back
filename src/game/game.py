@@ -1,5 +1,4 @@
 from math import sqrt
-from robot_class import Robot
 
 
 def distance(t1: tuple, t2: tuple):

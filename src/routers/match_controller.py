@@ -4,7 +4,7 @@ from schemas import imatch
 from crud import match_service
 from pony.orm import db_session
 
-from websockets import websocket_services
+from websockets2 import websocket_services
 
 
 match_end_points = APIRouter()

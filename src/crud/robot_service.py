@@ -1,5 +1,4 @@
 from pony.orm import db_session, commit, select
-from db.entities import Robot
 from schemas import irobot
 
 

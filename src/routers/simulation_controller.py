@@ -1,8 +1,8 @@
 from fastapi import APIRouter
 from schemas import isim
 from crud import simulation_service as sc
-from routers.robot.robot_class import Robot
-from routers.game.game import inflingir_danio, avanzar_ronda
+from game.robot_class import Robot
+from game.game import inflingir_danio, avanzar_ronda
 from crud.robot_service import get_file_by_id
 from pathlib import Path
 from random import randint

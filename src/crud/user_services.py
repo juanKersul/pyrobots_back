@@ -1,7 +1,7 @@
-from src.db.entities import User
 from pony.orm import db_session, commit
 import random
 from pony.orm import ObjectNotFound, OperationalError
+from db.database import db
 
 
 @db_session()
@@ -17,7 +17,7 @@ def add_user(new_username: str, new_password_encripted: str, new_email: str):
     validation_code = "".join(random.sample(new_password_encripted[7:13], 6))
     with db_session:
         try:
-            User(
+            db.Entity.User(
                 username=new_username,
                 password=new_password_encripted,
                 confirmation_mail=False,

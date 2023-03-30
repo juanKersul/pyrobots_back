@@ -6,16 +6,11 @@ from crud.user_services import (
     get_code_for_user,
     search_user_by_email,
     search_user,
-    sign_JWT,
-    decrypt_password,
     store_user_avatar,
-    decode_JWT,
-    get_user_from_db,
 )
 from schemas.iuser import User_base, User_login_schema
 from crud.robot_service import add_default_robot
 import shutil
-from datetime import datetime
 import base64
 
 user_end_points = APIRouter()

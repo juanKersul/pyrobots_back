@@ -1,10 +1,6 @@
 from random import randint, uniform
-from fastapi import UploadFile
 from fastapi.testclient import TestClient
-import main
-from crud.user_services import *
 from crud.match_service import *
-from crud.simulation_service import *
 import pytest
 
 

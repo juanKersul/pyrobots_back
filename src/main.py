@@ -4,11 +4,14 @@ from routers.match_controller import match_end_points
 from routers.simulation_controller import simulation_end_points
 from routers.robot_controller import robot_end_points
 from fastapi.middleware.cors import CORSMiddleware
-app = FastAPI()
+from db.database import define_database
 
+# Definiendo la aplicacion
+app = FastAPI()
 
 # Agregando cors urls
 origins = ["http://localhost:3000", "localhost:3000"]
+
 # Agregando middleware
 app.add_middleware(
     CORSMiddleware,
@@ -18,6 +21,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Definiendo la base de datos
+define_database(
+    provider="sqlite",
+    filename="db/database.sqlite",
+    create_db=True)
+
+# Agregando los routers
 app.include_router(user_end_points)
 app.include_router(match_end_points)
 app.include_router(robot_end_points)

@@ -1,44 +1,36 @@
-from pony.orm import PrimaryKey, Required, Optional, Set, IntArray
+from pony import orm
+from db.database import db
 
 
-def define_entities(db):
-    """Define las entidades de la base de datos."""
-    class User(db.Entity):
-        """Crea la tabla de usuarios."""
+class User(db.Entity):
+    """Crea la tabla de usuarios."""
+    __tablename__ = "users"
+    username = orm.PrimaryKey(str, 40)
+    password = orm.Required(str, 200)
+    confirmation_mail = orm.Required(bool)
+    email = orm.Required(str, unique=True)
+    robots = orm.Set("Robot", reverse="user_owner")
+    validation_code = orm.Required(str, 6)
 
-        __table__ = "users"
-        username = PrimaryKey(str, 40)
-        password = Required(str, 200)
-        avatar = Optional(str, nullable=False)
-        confirmation_mail = Required(bool)
-        email = Required(str, unique=True)
-        robots = Set("Robot")
-        matchs = Set("Match", reverse="users")
-        match_creates = Set("Match", reverse="user_creator")
-        validation_code = Required(str, 6)
 
-    class Robot(db.Entity):
-        """Crea la tabla de robots."""
+class Robot(db.Entity):
+    """Crea la tabla de robots."""
+    __tablename__ = "robots"
+    id = orm.PrimaryKey(int, auto=True)
+    name = orm.Required(str, unique=True)
+    matches_played = orm.Required(int)
+    matches_won = orm.Required(int)
+    avg_life_time = orm.Optional(float)
+    user_owner = orm.Required(User, reverse="robots")
 
-        __table__ = "robots"
-        id = PrimaryKey(int, auto=True)
-        name = Required(str, unique=True)
-        avatar = Optional(str)
-        matchs_pleyed = Required(int)
-        matchs_won = Required(int)
-        avg_life_time = Optional(float)
-        user_owner = Required(User)
 
-    class Match(db.Entity):
-        """Crea la tabla de partidas."""
-
-        id = PrimaryKey(int, auto=True)
-        name = Required(str, unique=True)
-        max_players = Optional(int)
-        min_players = Optional(int)
-        password = Optional(str)
-        n_matchs = Optional(int)
-        n_rounds_matchs = Optional(int)
-        users = Set("User", reverse="matchs")
-        user_creator = Required(User, reverse="match_creates")
-        robots_in_match = Optional(IntArray)
+class Match(db.Entity):
+    """Crea la tabla de partidas."""
+    id = orm.PrimaryKey(int, auto=True)
+    max_players = orm.Required(int)
+    password = orm.Optional(str)
+    n_matches = orm.Required(int)
+    n_rounds = orm.Required(int)
+    users = orm.Set(User)
+    user_creator = orm.Required(User)
+    robots_in_match = orm.Set(Robot)

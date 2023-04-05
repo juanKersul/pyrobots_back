@@ -1,15 +1,7 @@
 from fastapi import APIRouter, HTTPException, UploadFile
 from starlette.responses import RedirectResponse
-from crud.user_services import (
-    add_user,
-    update_confirmation,
-    get_code_for_user,
-    search_user_by_email,
-    search_user,
-    store_user_avatar,
-)
+import crud.user_services as user_service
 from schemas.iuser import User_base, User_login_schema
-from crud.robot_service import add_default_robot
 import shutil
 import base64
 
@@ -19,9 +11,9 @@ user_end_points = APIRouter()
 @user_end_points.post("/login")
 async def user_login(credentials: User_login_schema):
     """Iniciar Sesión.
-
     Args:
-        credentials (User_login_schema): credenciales, username o email, y contraseña.
+        credentials (User_login_schema): credenciales, username o email,
+        y contraseña.
 
     Raises:
         HTTPException: 400: el usuario no existe.
@@ -55,7 +47,6 @@ async def user_login(credentials: User_login_schema):
 @user_end_points.post("/register")
 async def user_register(user_to_add: User_base):
     """Registrar usuario
-
     Args:
         user_to_add (User_base): usuario a registrar
 
@@ -63,25 +54,11 @@ async def user_register(user_to_add: User_base):
         HTTPException: IntegrityError:409, el usuario ya existe.
         HTTPException: IntegrityError:409, el email ya existe.
         HTTPException: 400: el usuario no existe.
-
     Returns:
         dict[str, str]: {"Status": msg}
     """
-    msg = add_user(new_user=user_to_add)
-    if "IntegrityError" in msg and "username" in msg:
-        raise HTTPException(status_code=409, detail="El nombre de usuario ya existe")
-    if "IntegrityError" in msg and "email" in msg:
-        raise HTTPException(status_code=409, detail="El email ya existe")
-    code_validation = get_code_for_user(user_to_add.username)
-    if "no existe" in code_validation:
-        raise HTTPException(
-            status_code=400, detail="El usuario " + user_to_add.username + " no existe"
-        )
-    await send_confirmation_mail(
-        user_to_add.email, code_validation, user_to_add.username
-    )
-    return {"Status": msg}
-
+    user_service.add_user(new_user=user_to_add)
+    
 
 @user_end_points.get("/verify")
 def user_verification(username: str, code: str):

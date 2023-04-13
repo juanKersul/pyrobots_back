@@ -1,7 +1,10 @@
-from fastapi import APIRouter, HTTPException, UploadFile
+from fastapi import APIRouter
+from fastapi import HTTPException
+from fastapi import UploadFile
 from starlette.responses import RedirectResponse
 import crud.user_services as user_service
-from schemas.iuser import User_base, User_login_schema
+from schemas.iuser import User_base
+from schemas.iuser import User_login_schema
 import shutil
 import base64
 

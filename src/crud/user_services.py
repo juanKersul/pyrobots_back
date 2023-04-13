@@ -1,9 +1,10 @@
 from pony.orm import db_session
 from pony.orm import commit
 from pony.orm import rollback
-from pony.orm import ObjectNotFound
-from pony.orm import OperationalError
-from db.entities import User
+from pony.orm import OrmError
+from src.db.entities import User
+from src.exceptions import OperationalError
+from src.exceptions import ObjectNotFound
 
 
 @db_session()
@@ -31,9 +32,9 @@ def add_user(
             validation_code=validation_code,
         )
         commit()
-    except OperationalError("no se pudo agregar el usuario"):
+    except OrmError:
         rollback()
-        raise
+        raise OperationalError("No se pudo agregar el usuario")
 
 
 @db_session
@@ -50,15 +51,15 @@ def update_confirmation(username: str, validation_code: str):
     """
     try:
         user = User.get(username=username, validation_code=validation_code)
-    except OperationalError("no se pudo obtener el usuario"):
-        raise
+    except OrmError:
+        raise OperationalError("error al obtener el usuario")
     if user:
         try:
             user.confirmation_mail = True
             commit()
-        except OperationalError("no se pudo actualizar el usuario"):
+        except OrmError:
             rollback()
-            raise
+            raise OperationalError("No se pudo actualizar el usuario")
     else:
         raise ObjectNotFound("No existe el usuario con el nombre " + username)
 
@@ -76,9 +77,25 @@ def search_user(name: str):
     """
     try:
         user = User.get(username=name)
-    except OperationalError("no se pudo obtener el usuario"):
-        raise
+    except OrmError:
+        raise OperationalError("error al obtener el usuario")
     if user is None:
         raise ObjectNotFound("No existe el usuario con el nombre " + name)
     else:
         return user
+
+
+@db_session
+def check_user(username: str):
+    """Verifica si el usuario existe en la base de datos
+    Args:
+        username (str): Nombre de usuario
+    Returns:
+        bool: True si existe, False si no existe
+    Raises:
+        OperationalError: Si no se puede obtener el usuario
+    """
+    try:
+        return User.exists(username)
+    except OrmError:
+        raise OperationalError("error al obtener el usuario")

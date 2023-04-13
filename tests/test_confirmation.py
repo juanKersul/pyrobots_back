@@ -1,34 +1,10 @@
-from crud.user_services import get_code_for_user
-import pytest
+from src.crud.user_services import update_confirmation
 from fastapi.testclient import TestClient
 import main
 from crud.user_services import *
 
 
 client = TestClient(main.app)
-
-
-# Funciones auxiliares para los test
-def client_post_register(username, password, email):
-    return client.post(
-        "/register",
-        json={
-            "username": username,
-            "password": password,
-            "email": email
-            }
-    )
-
-
-@db_session
-def elim_user(username: str):
-    with db_session:
-        User[username].delete()
-
-
-def delete_db():
-    elim_user("anonymous")
-
 
 # Test para la confirmacion de usuarios
 def client_get_verify(username_to_ver, user_code):

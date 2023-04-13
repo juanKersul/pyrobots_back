@@ -2,9 +2,10 @@ from pony.orm import db_session
 from pony.orm import commit
 from pony.orm import rollback
 from pony.orm import select
-from pony.orm import ObjectNotFound
-from pony.orm import OperationalError
+from pony.orm import OrmError
 from db.entities import Robot
+from src.exceptions import OperationalError
+from src.exceptions import ObjectNotFound
 
 
 @db_session
@@ -23,9 +24,9 @@ def add_robot(robot_name: str, username: str):
             user_owner=username,
         )
         commit()
-    except OperationalError:
+    except OrmError:
         rollback()
-        raise
+        raise OperationalError("No se pudo agregar el robot")
 
 
 @db_session
@@ -41,10 +42,23 @@ def read_robots(username: str):
     """
     try:
         robots = select(x for x in Robot if x.user_owner.username == username)
-    except OperationalError("no se pudo leer la base de datos"):
-        raise
+    except OrmError:
+        raise OperationalError("No se pudo leer la base de datos")
     if robots is None:
         raise ObjectNotFound("No se encontraron robots")
     else:
         return robots
 
+
+@db_session
+def check_robot_name(robot_name: str, username: str):
+    """Verifica si el nombre del robot existe.
+    Args:
+        robot_name (str): Nombre del robot.
+    Returns:
+        bool: True si existe, False si no existe.
+    """
+    try:
+        return Robot.exists(name=robot_name, user_owner=username)
+    except OrmError:
+        raise OperationalError("No se pudo leer la base de datos")

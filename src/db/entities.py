@@ -1,5 +1,5 @@
 from pony import orm
-from db.database import db
+from src.db.database import db
 
 
 class User(db.Entity):
@@ -9,8 +9,10 @@ class User(db.Entity):
     password = orm.Required(str, 200)
     confirmation_mail = orm.Required(bool)
     email = orm.Required(str, unique=True)
-    robots = orm.Set("Robot", reverse="user_owner")
+    robots = orm.Set("Robot")
     validation_code = orm.Required(str, 6)
+    matches = orm.Set("Match", reverse="users")
+    match_created = orm.Set("Match", reverse="user_creator")
 
 
 class Robot(db.Entity):
@@ -21,7 +23,8 @@ class Robot(db.Entity):
     matches_played = orm.Required(int)
     matches_won = orm.Required(int)
     avg_life_time = orm.Optional(float)
-    user_owner = orm.Required(User, reverse="robots")
+    user_owner = orm.Required(User)
+    matches = orm.Set("Match")
 
 
 class Match(db.Entity):
@@ -31,6 +34,6 @@ class Match(db.Entity):
     password = orm.Optional(str)
     n_matches = orm.Required(int)
     n_rounds = orm.Required(int)
-    users = orm.Set(User)
+    users = orm.Set("User", reverse="matches")
     user_creator = orm.Required(User)
-    robots_in_match = orm.Set(Robot)
+    robots_in_match = orm.Set("Robot")

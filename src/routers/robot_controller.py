@@ -1,24 +1,13 @@
-from fastapi import APIRouter, HTTPException, UploadFile, File
+from fastapi import APIRouter
+from fastapi import HTTPException
+from fastapi import UploadFile
+from fastapi import File
 from crud import robot_service
-from crud.robot_service import add_robot, get_image_name
-import shutil
+from crud.robot_service import add_robot
 from typing import Optional
 import base64
 
 robot_end_points = APIRouter()
-
-
-def store_config(file: UploadFile, owner: str):
-    file.file.seek(0)
-    new_filename = file.filename.replace(".py", "_" + owner + ".py")
-    with open("routers/robots/" + new_filename, "wb+") as upload_folder:
-        shutil.copyfileobj(file.file, upload_folder)
-
-
-def store_avatar(file: UploadFile):
-    file.file.seek(0)
-    with open("routers/robots/avatars/" + file.filename, "wb+") as upload_folder:
-        shutil.copyfileobj(file.file, upload_folder)
 
 
 @robot_end_points.post("/upload/robot")

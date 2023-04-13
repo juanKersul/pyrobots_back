@@ -6,21 +6,6 @@ import os
 client = TestClient(main.app)
 
 
-@db_session
-def elim_user(username: str):
-    with db_session:
-        User[username].delete()
-
-
-def delete_db(user: str):
-    elim_user(user)
-    file_path = os.path.join("routers/robots/", "robot1_Alexis.py")
-    os.remove(file_path)
-    file_path2 = os.path.join("routers/robots/avatars/", "Alexis_robot1.jpg")
-    os.remove(file_path2)
-
-
-# Funciones auxiliares para los test
 def client_post_register(username, password, email):
     return client.post(
         "/register", json={"username": username, "password": password, "email": email}

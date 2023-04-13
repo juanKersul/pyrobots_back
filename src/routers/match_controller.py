@@ -1,9 +1,8 @@
-from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter
+from fastapi import HTTPException
+from fastapi import WebSocket
 from schemas import imatch
 from crud import match_service
-from pony.orm import db_session
-
 from websockets2 import websocket_services
 
 

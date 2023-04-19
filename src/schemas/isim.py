@@ -3,7 +3,7 @@ from typing import Set
 from pydantic import BaseModel, validator
 import re
 
-from crud import simulation_service as sc
+from crud import robot_service as sc
 
 
 class SimulationBase(BaseModel):

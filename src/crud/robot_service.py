@@ -1,11 +1,10 @@
 from pony.orm import db_session
 from pony.orm import commit
-from pony.orm import rollback
 from pony.orm import select
-from pony.orm import OrmError
-from db.entities import Robot
-from src.exceptions import OperationalError
-from src.exceptions import ObjectNotFound
+from exceptions.classes import OperationalError
+from exceptions.classes import ObjectNotFound
+from db.database import database
+db = database
 
 
 @db_session
@@ -15,18 +14,18 @@ def add_robot(robot_name: str, username: str):
         robot_name (str): Nombre del robot.
         username (str): Nombre de usuario o email.
     """
-    try:
-        Robot(
-            name=robot_name,
-            matchs_played=0,
-            matchs_won=0,
-            avg_life_time=0.0,
-            user_owner=username,
-        )
-        commit()
-    except OrmError:
-        rollback()
-        raise OperationalError("No se pudo agregar el robot")
+    if db.Robot.exists(name=robot_name, user_owner=username):
+        raise OperationalError("El robot ya existe")
+    if db.User.exists(name=robot_name) is False:
+        raise OperationalError("El usuario no existe")
+    db.Robot(
+        name=robot_name,
+        matchs_played=0,
+        matchs_won=0,
+        avg_life_time=0.0,
+        user_owner=username,
+    )
+    commit()
 
 
 @db_session
@@ -40,25 +39,28 @@ def read_robots(username: str):
         ObjectNotFound: No se encontraron robots.
         OperationalError: No se pudo leer la base de datos.
     """
-    try:
-        robots = select(x for x in Robot if x.user_owner.username == username)
-    except OrmError:
-        raise OperationalError("No se pudo leer la base de datos")
-    if robots is None:
-        raise ObjectNotFound("No se encontraron robots")
-    else:
-        return robots
+    return select(x for x in db.Robot if x.user_owner.username == username)
 
 
 @db_session
-def check_robot_name(robot_name: str, username: str):
+def check_robot(robot_name: str, username: str):
     """Verifica si el nombre del robot existe.
     Args:
         robot_name (str): Nombre del robot.
     Returns:
         bool: True si existe, False si no existe.
     """
-    try:
-        return Robot.exists(name=robot_name, user_owner=username)
-    except OrmError:
-        raise OperationalError("No se pudo leer la base de datos")
+    return db.Robot.exists(name=robot_name, user_owner=username)
+
+
+@db_session
+def read_robot(robot_name: str, username: str):
+    """Lee un robot de la base de datos.
+    Args:
+        robot_name (str): Nombre del robot.
+        username (str): Nombre de usuario o email.
+    Returns: """
+    if db.Robot.exists(name=robot_name, user_owner=username) is False:
+        raise ObjectNotFound("El robot no existe")
+    else:
+        return db.Robot[robot_name, username]

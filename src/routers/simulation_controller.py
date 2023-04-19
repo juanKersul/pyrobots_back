@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from schemas import isim
-from crud import simulation_service as sc
+from crud import robot_service as sc
 from game.robot_class import Robot
 from random import randint
 
@@ -71,6 +71,6 @@ async def create_simulation(simulation: isim.SimulationCreate):
         k = 0
         for j in i:
             j["id"] = id_robot_parsed[k]
-            j["nombre"] = sc.get_robot_name(id_robot_parsed[k])
+            j["nombre"] = sc.get_robot(id_robot_parsed[k])
             k += 1
     return outer_response

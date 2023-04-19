@@ -1,13 +1,9 @@
 from fastapi import APIRouter
 from fastapi import HTTPException
-from fastapi import UploadFile
 from starlette.responses import RedirectResponse
 import crud.user_services as user_service
-from schemas.iuser import User_base
 from schemas.iuser import User_login_schema
-import shutil
-import base64
-
+from security.password import encrypt_password
 user_end_points = APIRouter()
 
 
@@ -48,7 +44,7 @@ async def user_login(credentials: User_login_schema):
 
 
 @user_end_points.post("/register")
-async def user_register(user_to_add: User_base):
+async def user_register(username: str, password: str, email: str):
     """Registrar usuario
     Args:
         user_to_add (User_base): usuario a registrar
@@ -60,8 +56,9 @@ async def user_register(user_to_add: User_base):
     Returns:
         dict[str, str]: {"Status": msg}
     """
-    user_service.add_user(new_user=user_to_add)
-    
+    encripted_password = encrypt_password(password)
+    user_service.add_user(username, encripted_password, email)
+
 
 @user_end_points.get("/verify")
 def user_verification(username: str, code: str):
@@ -91,29 +88,3 @@ def user_verification(username: str, code: str):
     return response
 
 
-@user_end_points.post("/ReplaceUserImage")
-async def replace_user_image(token: str, file: UploadFile):
-    res = store_user_avatar(token, file)
-    if res != "token invalido":
-        store_Userimg(file)
-        return {"imagen guardada con exito"}
-    else:
-        raise HTTPException(status_code=400, detail="token invalido")
-
-
-def store_Userimg(file: UploadFile):
-    file.file.seek(0)
-    with open("routers/users/avatars/" + file.filename, "wb+") as upload_folder:
-        shutil.copyfileobj(file.file, upload_folder)
-
-
-@user_end_points.get("/GetUser")
-def get_user(token):
-    user = get_user_from_db(token)
-    if user != "token invalido":
-        path = "routers/users/avatars/" + str(user.avatar)
-        with open(path, "rb") as f:
-            base64image = base64.b64encode(f.read())
-        return {"username": user.username, "email": user.email, "avatar": base64image}
-    else:
-        raise HTTPException(status_code=400, detail="token invalido")

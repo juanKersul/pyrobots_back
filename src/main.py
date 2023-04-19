@@ -4,8 +4,8 @@ from routers.match_controller import match_end_points
 from routers.simulation_controller import simulation_end_points
 from routers.robot_controller import robot_end_points
 from fastapi.middleware.cors import CORSMiddleware
-from db.database import define_database
-
+from db.database import map_database
+from db.database import database
 # Definiendo la aplicacion
 app = FastAPI()
 
@@ -21,10 +21,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Definiendo la base de datos
-define_database(
+# mapear base de datos
+map_database(
+    database,
     provider="sqlite",
-    filename="db/database.sqlite",
+    filename="database.sqlite",
     create_db=True)
 
 # Agregando los routers

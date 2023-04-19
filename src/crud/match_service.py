@@ -3,47 +3,56 @@ from pony.orm import commit
 from pony.orm import rollback
 from pony.orm import select
 from pony.orm import OrmError
-from src.exceptions import OperationalError
-from src.exceptions import ObjectNotFound
-from db.entities import Match
-from db.entities import User
-from db.entities import Robot
+from exceptions.classes import OperationalError
+from exceptions.classes import ObjectNotFound
 
 
 @db_session
 def create_match(
+    db,
     user_creator: str,
     max_players: int,
-    n_password: str,
-    n_matchs: int,
-    n_rounds: int,
-):
-    """Crear Partida
-    args:
-        user_creator: nombre del usuario creador
-        max_players: numero maximo de jugadores
-        password: contraseña de la partida
-        n_matchs: numero de partidas
-        n_rounds: numero de rondas
-    raises:
-        OperationalError: fallo crear partida"""
+    password: str,
+    max_matches: int,
+    max_rounds: int,
+) -> int:
+    """_summary_
+
+    Args:
+        user_creator (str): user that creates the match
+        max_players (int): max players in match
+        password (str): password of match
+        max_matches (int): max matches in match
+        max_rounds (int): max rounds in match
+
+    Raises:
+        ObjectNotFound: user_creator not found
+        OperationalError: failed to search user_creator
+        OperationalError: failed to create match
+    """
+    if db.User.exists(username=user_creator) is False:
+        raise ObjectNotFound(f"User '{user_creator}' not found")
     try:
-        Match(
-            max_players=abs(max_players),
-            password=n_password,
-            n_matchs=min(abs(n_matchs), 200),
-            n_rounds_matchs=min(abs(n_rounds), 10000),
-            users={user_creator},
-            user_creator=user_creator,
+        user = db.User[user_creator]
+    except OrmError as e:
+        raise OperationalError("failed to search user", e)
+    try:
+        new_match = db.Match(
+            max_players=max_players,
+            password=password,
+            n_matches=max_matches,
+            n_rounds=max_rounds,
+            user_creator=user,
         )
         commit()
-    except OrmError:
+        return new_match.get_pk()
+    except OrmError as e:
         rollback()
-        raise OperationalError("fallo crear partida")
+        raise OperationalError("failed to create match", e)
 
 
 @db_session
-def read_matchs():
+def read_matchs(db):
     """Listar Partidas
 
     Args:
@@ -54,14 +63,13 @@ def read_matchs():
         List[Match]: Lista de partidas.
     """
     try:
-        matchs = select(x for x in Match)
-        return matchs
-    except OrmError:
-        raise OperationalError("fallo listar partidas")
+        return select(x for x in db.Match)
+    except OrmError as e:
+        raise OperationalError("fallo listar partidas", e)
 
 
 @db_session
-def add_player(id_match: int, id_robot: int, username: str):
+def add_player(db, id_match: int, robot_name: str, user_name: str):
     """
     Añade un jugador a una partida.
     args:
@@ -72,29 +80,25 @@ def add_player(id_match: int, id_robot: int, username: str):
         OperationalError: fallo añadir jugador
         OperationalError: partida llena
     """
-    try:
-        match = Match[id_match]
-    except OrmError:
-        raise ObjectNotFound("fallo leer partida")
-    try:
-        user = User[username]
-    except OrmError:
-        raise ObjectNotFound("fallo leer usuario")
-    try:
-        robot = Robot[id_robot]
-    except OrmError:
-        raise ObjectNotFound("fallo leer robot")
-    try:
+    if db.Match.exists(id=id_match) is False:
+        raise ObjectNotFound("no existe la partida")
+    if db.User.exists(username=user_name) is False:
+        raise ObjectNotFound("no existe el usuario")
+    if db.Robot.exists(name=robot_name, user_owner=user_name) is False:
+        raise ObjectNotFound("no existe el robot")
+    match = db.Match[id_match]
+    user = db.User[user_name]
+    robot = db.Robot[robot_name, user_name]
+    if len(match.robots_in_match) < match.max_players:
         match.robots_in_match.add(robot)
         match.users.add(user)
         commit()
-    except OrmError:
-        rollback()
-        raise OperationalError("fallo añadir jugador")
+    else:
+        raise OperationalError("partida llena")
 
 
 @db_session
-def remove_player(id_match: int, id_robot: int, name_user: str):
+def remove_player(db, id_match: int, robot_name: str, user_name: str):
     """
     Elimina un jugador de una partida.
     args:
@@ -103,45 +107,46 @@ def remove_player(id_match: int, id_robot: int, name_user: str):
         name_user: nombre del usuario
     raises:
         OperationalError: fallo eliminar jugador"""
-    try:
-        match = Match[id_match]
-    except OrmError:
-        raise ObjectNotFound("fallo leer partida")
-    try:
-        user = User[name_user]
-    except OrmError:
-        raise ObjectNotFound("fallo leer usuario")
-    try:
-        robot = Robot[id_robot]
-    except OrmError:
-        raise ObjectNotFound("fallo leer robot")
-    try:
-        match.robots_in_match.remove(robot)
-        match.users.remove(user)
-        commit()
-    except OperationalError("fallo eliminar jugador"):
-        rollback()
-        raise
+    if db.Match.exists(id=id_match) is False:
+        raise ObjectNotFound("no existe la partida")
+    if db.User.exists(username=user_name) is False:
+        raise ObjectNotFound("no existe el usuario")
+    if db.Robot.exists(name=robot_name, user_owner=user_name) is False:
+        raise ObjectNotFound("no existe el robot")
+    else:
+        match = db.Match[id_match]
+        user = db.User[user_name]
+        robot = db.Robot[robot_name, user_name]
+        try:
+            match.robots_in_match.remove(robot)
+            match.users.remove(user)
+            commit()
+        except OrmError:
+            rollback()
+            raise OperationalError("fallo eliminar jugador")
 
 
 @db_session
-def delete_match(id_match: int):
+def delete_match(db, id_match: int):
     """
     Elimina una partida.
     args:
         id_match: id de la partida
     raises:
         OperationalError: fallo eliminar partida"""
-    try:
-        Match[id_match].delete()
-        commit()
-    except OperationalError("fallo eliminar partida"):
-        rollback()
-        raise
+    if db.Match.exists(id=id_match) is False:
+        raise ObjectNotFound("no existe la partida")
+    else:
+        try:
+            db.Match[id_match].delete()
+            commit()
+        except OperationalError("fallo eliminar partida"):
+            rollback()
+            raise
 
 
 @db_session
-def check_match(id_match: int):
+def check_match(db, id_match: int):
     """
     Comprueba si existe una partida.
     args:
@@ -149,7 +154,4 @@ def check_match(id_match: int):
     returns:
         bool: True si existe, False si no existe.
     """
-    try:
-        return Match.exists(id=id_match)
-    except OrmError:
-        raise OperationalError("fallo comprobar partida")
+    return db.Match.exists(id=id_match)

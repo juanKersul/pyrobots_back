@@ -1,10 +1,7 @@
 from pony.orm import db_session
 from pony.orm import commit
-from pony.orm import rollback
-from pony.orm import OrmError
-from src.db.entities import User
-from src.exceptions import OperationalError
-from src.exceptions import ObjectNotFound
+from exceptions.classes import OperationalError
+from exceptions.classes import ObjectNotFound
 
 
 @db_session()
@@ -23,18 +20,18 @@ def add_user(
         validation_code (str): Codigo de validacion
     raises: OperationalError: Si no se puede agregar el usuario
     """
-    try:
-        User(
-            username=new_username,
-            password=new_password_encripted,
-            confirmation_mail=False,
-            email=new_email,
-            validation_code=validation_code,
-        )
-        commit()
-    except OrmError:
-        rollback()
-        raise OperationalError("No se pudo agregar el usuario")
+    if User.exists(username=new_username):
+        raise OperationalError("El usuario ya existe")
+    if User.exists(email=new_email):
+        raise OperationalError("El email ya esta en uso")
+    User(
+        username=new_username,
+        password=new_password_encripted,
+        confirmation_mail=False,
+        email=new_email,
+        validation_code=validation_code,
+    )
+    commit()
 
 
 @db_session
@@ -49,19 +46,15 @@ def update_confirmation(username: str, validation_code: str):
         OperationalError: Si no se puede actualizar el usuario
         OperationalError: Si no se puede obtener el usuario
     """
-    try:
-        user = User.get(username=username, validation_code=validation_code)
-    except OrmError:
-        raise OperationalError("error al obtener el usuario")
-    if user:
-        try:
-            user.confirmation_mail = True
-            commit()
-        except OrmError:
-            rollback()
-            raise OperationalError("No se pudo actualizar el usuario")
-    else:
+    if User.exists(username=username) is False:
         raise ObjectNotFound("No existe el usuario con el nombre " + username)
+    else:
+        user = User[username]
+        if user.validation_code == validation_code:
+            user.confirmation_mail = True
+        else:
+            raise OperationalError("Codigo de validacion incorrecto")
+        commit()
 
 
 @db_session()
@@ -75,14 +68,10 @@ def search_user(name: str):
         ObjectNotFound: Si no se encuentra al usuario en la base de datos.
         OperationalError: Si no se puede obtener el usuario
     """
-    try:
-        user = User.get(username=name)
-    except OrmError:
-        raise OperationalError("error al obtener el usuario")
-    if user is None:
+    if User.exists(username=name) is False:
         raise ObjectNotFound("No existe el usuario con el nombre " + name)
     else:
-        return user
+        return User[name]
 
 
 @db_session
@@ -95,7 +84,4 @@ def check_user(username: str):
     Raises:
         OperationalError: Si no se puede obtener el usuario
     """
-    try:
-        return User.exists(username)
-    except OrmError:
-        raise OperationalError("error al obtener el usuario")
+    return User.exists(username)

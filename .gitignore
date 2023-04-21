@@ -31,3 +31,4 @@ src/game/__pycache__/__init__.cpython-310.pyc
 src/game/__pycache__/robot_class.cpython-310.pyc
 *.pyc
 src/db/database.sqlite
+src/.env

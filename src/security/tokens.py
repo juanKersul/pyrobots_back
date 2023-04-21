@@ -3,8 +3,8 @@ from datetime import datetime, timedelta
 import jwt
 
 # se obtienen de env
-JWT_SECRET = config("secret")
-JWT_ALGORITHM = config("algorithm")
+JWT_SECRET = config("JWT_SECRET")
+JWT_ALGORITHM = config("JWT_ALGORITHM")
 JWT_EXPIRES = timedelta(1)
 
 

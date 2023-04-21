@@ -4,7 +4,6 @@ from pony.orm import rollback
 from pony.orm import select
 from pony.orm import OrmError
 from exceptions.classes import OperationalError
-from exceptions.classes import ObjectNotFound
 
 
 @db_session
@@ -30,8 +29,6 @@ def create_match(
         OperationalError: failed to search user_creator
         OperationalError: failed to create match
     """
-    if db.User.exists(username=user_creator) is False:
-        raise ObjectNotFound(f"User '{user_creator}' not found")
     try:
         user = db.User[user_creator]
     except OrmError as e:
@@ -80,15 +77,19 @@ def add_player(db, id_match: int, robot_name: str, user_name: str):
         OperationalError: fallo añadir jugador
         OperationalError: partida llena
     """
-    if db.Match.exists(id=id_match) is False:
-        raise ObjectNotFound("no existe la partida")
-    if db.User.exists(username=user_name) is False:
-        raise ObjectNotFound("no existe el usuario")
-    if db.Robot.exists(name=robot_name, user_owner=user_name) is False:
-        raise ObjectNotFound("no existe el robot")
-    match = db.Match[id_match]
-    user = db.User[user_name]
-    robot = db.Robot[robot_name, user_name]
+    try:
+        match = db.Match[id_match]
+    except OrmError as e:
+        raise OperationalError("fallo buscar jugador", e)
+    try:
+        user = db.User[user_name]
+    except OrmError as e:
+        raise OperationalError("fallo buscar usuario", e)
+    try:
+        robot = db.Robot[robot_name, user_name]
+    except OrmError as e:
+        raise OperationalError("fallo buscar robot", e)
+
     if len(match.robots_in_match) < match.max_players:
         match.robots_in_match.add(robot)
         match.users.add(user)
@@ -107,23 +108,25 @@ def remove_player(db, id_match: int, robot_name: str, user_name: str):
         name_user: nombre del usuario
     raises:
         OperationalError: fallo eliminar jugador"""
-    if db.Match.exists(id=id_match) is False:
-        raise ObjectNotFound("no existe la partida")
-    if db.User.exists(username=user_name) is False:
-        raise ObjectNotFound("no existe el usuario")
-    if db.Robot.exists(name=robot_name, user_owner=user_name) is False:
-        raise ObjectNotFound("no existe el robot")
-    else:
+    try:
         match = db.Match[id_match]
+    except OrmError as e:
+        raise OperationalError("fallo buscar partida", e)
+    try:
         user = db.User[user_name]
+    except OrmError as e:
+        raise OperationalError("fallo buscar usuario", e)
+    try:
         robot = db.Robot[robot_name, user_name]
-        try:
-            match.robots_in_match.remove(robot)
-            match.users.remove(user)
-            commit()
-        except OrmError:
-            rollback()
-            raise OperationalError("fallo eliminar jugador")
+    except OrmError as e:
+        raise OperationalError("fallo buscar robot", e)
+    try:
+        match.robots_in_match.remove(robot)
+        match.users.remove(user)
+        commit()
+    except OrmError as e:
+        rollback()
+        raise OperationalError("fallo eliminar jugador", e)
 
 
 @db_session
@@ -134,15 +137,12 @@ def delete_match(db, id_match: int):
         id_match: id de la partida
     raises:
         OperationalError: fallo eliminar partida"""
-    if db.Match.exists(id=id_match) is False:
-        raise ObjectNotFound("no existe la partida")
-    else:
-        try:
-            db.Match[id_match].delete()
-            commit()
-        except OperationalError("fallo eliminar partida"):
-            rollback()
-            raise
+    try:
+        db.Match[id_match].delete()
+        commit()
+    except OrmError as e:
+        rollback()
+        raise OperationalError("fallo eliminar partida", e)
 
 
 @db_session
@@ -154,4 +154,7 @@ def check_match(db, id_match: int):
     returns:
         bool: True si existe, False si no existe.
     """
-    return db.Match.exists(id=id_match)
+    try:
+        return db.Match.exists(id=id_match)
+    except OrmError as e:
+        raise OperationalError("fallo buscar partida", e)

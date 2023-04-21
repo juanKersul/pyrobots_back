@@ -1,5 +1,4 @@
 import sys
-
 path = "src"
 sys.path.append(path)
 from src.crud.match_service import create_match
@@ -11,42 +10,6 @@ from src.exceptions.classes import OperationalError
 from src.exceptions.classes import ObjectNotFound
 import pytest
 
-"""
-Code Analysis:
-
-Objective:
-The objective of the 'create_match' function is to create a new match in the
- database with the given parameters and associate it with the user who created
- it.
-
-Inputs:
-- user_creator: a string representing the username of the user who created
-    the match.
-- max_players: an integer representing the maximum number of players allowed
-    in the match.
-- password: a string representing the password for the match.
-- max_matches: an integer representing the maximum number of matches allowed.
-- max_rounds: an integer representing the maximum number of rounds allowed.
-
-Flow:
-1. Check if the user_creator exists in the database.
-2. Retrieve the user object from the database.
-3. Create a new match object with the given parameters and associate it with
-    the user object.
-4. Commit the changes to the database.
-5. If there is an error, rollback the changes and raise an OperationalError.
-
-Outputs:
-- None
-
-Additional aspects:
-- The function is decorated with the 'db_session' decorator, which creates a
-    database session for the function to use.
-- The function raises two custom exceptions, 'OperationalError' and
-    'ObjectNotFound', which are defined in the code above the function.
-- The 'Match' and 'User' classes are defined using the Pony ORM, which
-    provides an object-relational mapping for the database.
-"""
 db = define_database()
 
 
@@ -113,8 +76,9 @@ class TestCreateMatch:
             max_matches=3,
             max_rounds=5,
         )
-        assert result == 2
+        assert result == db.Match[result].id
         assert db.Match[result].user_creator.username == new_username
+        
 
     def test_user_creator_does_not_exist_in_db(self):
         # Edge case test

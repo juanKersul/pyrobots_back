@@ -1,7 +1,6 @@
 from cryptography.fernet import Fernet
-from decouple import config
 
-KEY_CRYPT = "asd"
+KEY_CRYPT = b'ZmDfcTF7_60GrrY167zsiPd67pEvs0aGOv2oasOM1Pg='
 
 
 def decrypt_password(password: str):

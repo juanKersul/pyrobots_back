@@ -40,6 +40,7 @@ def create_match(
             n_matches=max_matches,
             n_rounds=max_rounds,
             user_creator=user,
+            active=False,
         )
         commit()
         return new_match.get_pk()
@@ -60,9 +61,9 @@ def read_matchs(db):
         List[Match]: Lista de partidas.
     """
     try:
-        return select(x for x in db.Match)
+        return select(x for x in db.Match if db.Match.active is True)
     except OrmError as e:
-        raise OperationalError("fallo listar partidas", e)
+        raise OperationalError("failed to read matches", e)
 
 
 @db_session
@@ -158,3 +159,21 @@ def check_match(db, id_match: int):
         return db.Match.exists(id=id_match)
     except OrmError as e:
         raise OperationalError("fallo buscar partida", e)
+
+
+@db_session
+def active_match(db, id_match: int):
+    """
+    Activa una partida.
+    args:
+        id_match: id de la partida
+    raises:
+        OperationalError: fallo activar partida
+    """
+    try:
+        match = db.Match[id_match]
+        match.active = True
+        commit()
+    except OrmError as e:
+        rollback()
+        raise OperationalError("fallo activar partida", e)

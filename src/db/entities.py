@@ -44,4 +44,5 @@ def define_matches(db):
         users = Set("User", reverse="matches")
         user_creator = Required("User")
         robots_in_match = Set("Robot")
+        active = Required(bool)
     return Match

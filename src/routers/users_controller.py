@@ -6,34 +6,14 @@ from crud.user_services import update_confirmation
 from crud.user_services import check_user
 from crud.user_services import check_email
 from security.password import encrypt_password
-from security.password import decrypt_password
 from security.validation_code import generate_validation_code
-from security.tokens import generate_token
 from mail2.email_service import send_confirmation_mail
 from db.database import database
 
 user_end_points = APIRouter()
 
 
-@user_end_points.post("/session")
-async def user_login(username: str, password: str):
-    if check_user(database, username):
-        user = search_user(database, username)
-        if decrypt_password(user.password) == password:
-            if user.confirmation_mail:
-                token = generate_token(username)
-                return {"Status": "Usuario logueado con exito", "token": token}
-            else:
-                raise HTTPException(
-                    status_code=400, detail="El usuario no esta confirmado"
-                )
-        else:
-            raise HTTPException(status_code=400, detail="Contraseña incorrecta")
-    else:
-        raise HTTPException(status_code=400, detail="El usuario no existe")
-
-
-@user_end_points.post("Users")
+@user_end_points.post("/Users")
 async def user_register(username: str, password: str, email: str):
     """Registrar usuario
     Args:
@@ -62,7 +42,7 @@ async def user_register(username: str, password: str, email: str):
         return {"Status": "Usuario creado con exito"}
 
 
-@user_end_points.patch("/Users/{username}")
+@user_end_points.put("/Users/{username}/verify")
 def user_verification(username: str, code: str):
     """Verificación de usuario
 

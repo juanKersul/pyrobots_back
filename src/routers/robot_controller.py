@@ -1,23 +1,15 @@
 from fastapi import APIRouter
 from fastapi import HTTPException
 from fastapi import UploadFile
-from fastapi import File
 from crud import robot_service
 from crud.robot_service import add_robot
-from typing import Optional
 import base64
 
 robot_end_points = APIRouter()
 
 
-@robot_end_points.post("/upload/robot")
-async def robot_upload(
-    *,
-    config: UploadFile,
-    avatar: Optional[UploadFile] = File(None),
-    name: str,
-    tkn: str
-):
+@robot_end_points.post("/Robot")
+async def robot_upload(config: UploadFile, name: str, tkn: str):
     """Cargar Robot
 
     Args:

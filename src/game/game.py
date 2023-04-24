@@ -278,3 +278,25 @@ def return_results(resultado: list):
             ganador["ganador"] = i
     ganador["resultado"] = resultado2
     return ganador
+
+
+def game(robots: list, rounds):
+    """Ejecuta un juego
+
+    Args:
+        robots (list): Lista de robots de la simulación
+        rounds (int): Cantidad de rondas del juego
+
+    Returns:
+        List[Any]: Lista de Rondas, un juego.
+    """
+    results_by_robots = []
+    for robot in robots:
+        if robot != None:
+            try:
+                robot.initialize()
+            except:
+                pass
+    for i in range(rounds):
+        results_by_robots.append(avanzar_ronda(robots))
+    return results_by_robots

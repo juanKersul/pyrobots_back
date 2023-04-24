@@ -81,22 +81,40 @@ def add_player(db, id_match: int, robot_name: str, user_name: str):
     try:
         match = db.Match[id_match]
     except OrmError as e:
-        raise OperationalError("fallo buscar jugador", e)
+        raise OperationalError("failed to search match", e)
     try:
         user = db.User[user_name]
     except OrmError as e:
-        raise OperationalError("fallo buscar usuario", e)
+        raise OperationalError("failed to search user", e)
     try:
         robot = db.Robot[robot_name, user_name]
     except OrmError as e:
-        raise OperationalError("fallo buscar robot", e)
-
-    if len(match.robots_in_match) < match.max_players:
+        raise OperationalError("failed to search robot", e)
+    try:
         match.robots_in_match.add(robot)
         match.users.add(user)
         commit()
-    else:
-        raise OperationalError("partida llena")
+    except OrmError as e:
+        rollback()
+        raise OperationalError("failed to add player", e)
+
+
+@db_session
+def chech_match_is_full(db, id_match: int) -> bool:
+    """
+    Comprueba si la partida esta llena.
+    args:
+        id_match: id de la partida
+    raises:
+        OperationalError: fallo buscar partida
+    """
+    try:
+        match = db.Match[id_match]
+    except OrmError as e:
+        raise OperationalError("fallo buscar partida", e)
+    if len(match.robots_in_match) == match.max_players:
+        return True
+    return False
 
 
 @db_session

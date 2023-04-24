@@ -1,34 +1,30 @@
 from decouple import config
-from datetime import datetime, timedelta
-import jwt
+from datetime import datetime
+from datetime import timedelta
+from datetime import timezone
+from exceptions.classes import OperationalError
+from jwt import decode
+from jwt import encode
+from jwt import PyJWTError
+from jwt import ExpiredSignatureError
 
 # se obtienen de env
 JWT_SECRET = config("JWT_SECRET")
 JWT_ALGORITHM = config("JWT_ALGORITHM")
-JWT_EXPIRES = timedelta(1)
+JWT_EXPIRES = timedelta(minutes=int(config("JWT_EXPIRES")))
 
 
-def get_payload(userID: str):
-    """Encodea el token.
-
-    Args:
-        userID (str): id del usuario.
-
-    Returns:
-        Dict[str,str]: {"id_usuario":"fecha de expiración"}
-    """
-    payload = {"userID": userID, "expiry": str(datetime.now() + JWT_EXPIRES)}
-    return payload
-
-
-def sign_JWT(userID: str):
-    payload = get_payload(userID)
-    token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
-    return token
+def generate_token(userID: str):
+    payload = {"userID": userID, "exp": datetime.now(tz=timezone.utc) + JWT_EXPIRES}
+    try:
+        token = encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+        return token
+    except PyJWTError as e:
+        raise OperationalError("No se pudo generar el token", e)
 
 
 # esta funcion decodea el token
-def decode_JWT(token: str):
+def decode_token(token: str):
     """Decodea el token
 
     Args:
@@ -38,7 +34,9 @@ def decode_JWT(token: str):
         Dict[str, Any]: {"userID": "", "expiry": 0}
     """
     try:
-        decode_token = jwt.decode(token, JWT_SECRET, algorithms=JWT_ALGORITHM)
-        return decode_token
-    except:
-        return {"userID": "", "expiry": 0}
+        decode_token = decode(token, JWT_SECRET, algorithms=JWT_ALGORITHM)
+        return True, decode_token
+    except ExpiredSignatureError:
+        return False, {}
+    except PyJWTError as e:
+        raise OperationalError("No se pudo decodificar el token", e)

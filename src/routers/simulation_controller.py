@@ -7,28 +7,6 @@ from random import randint
 simulation_end_points = APIRouter()
 
 
-def game(robots: list, rounds):
-    """Ejecuta un juego
-
-    Args:
-        robots (list): Lista de robots de la simulación
-        rounds (int): Cantidad de rondas del juego
-
-    Returns:
-        List[Any]: Lista de Rondas, un juego.
-    """
-    results_by_robots = []
-    for robot in robots:
-        if robot != None:
-            try:
-                robot.initialize()
-            except:
-                pass
-    for i in range(rounds):
-        results_by_robots.append(avanzar_ronda(robots))
-    return results_by_robots
-
-
 @simulation_end_points.post("/simulation/add")
 async def create_simulation(simulation: isim.SimulationCreate):
     """Crea una simulación.

@@ -9,7 +9,6 @@ from security.password import encrypt_password
 from security.validation_code import generate_validation_code
 from mail2.email_service import send_confirmation_mail
 from db.database import database
-
 user_end_points = APIRouter()
 
 

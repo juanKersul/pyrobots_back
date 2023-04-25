@@ -7,7 +7,7 @@ from random import randint
 simulation_end_points = APIRouter()
 
 
-@simulation_end_points.post("/simulation/add")
+@simulation_end_points.post("/Simulation")
 async def create_simulation(simulation: isim.SimulationCreate):
     """Crea una simulación.
 

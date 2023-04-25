@@ -4,12 +4,16 @@ from fastapi import UploadFile
 from crud import robot_service
 from crud.robot_service import add_robot
 import base64
+from fastapi import Depends
+from routers.session_controller import authorization
 
 robot_end_points = APIRouter()
 
 
 @robot_end_points.post("/Robot")
-async def robot_upload(config: UploadFile, name: str, tkn: str):
+async def upload_robot(
+    config: UploadFile, name: str, username: str = Depends(authorization)
+):
     """Cargar Robot
 
     Args:
@@ -55,8 +59,8 @@ async def robot_upload(config: UploadFile, name: str, tkn: str):
     return {"msg": msg}
 
 
-@robot_end_points.get("/robots")
-def read_robots(token: str):
+@robot_end_points.get("/Robots")
+def read_robots(token: str = Depends(authorization)):
     """Listar Robots
 
     Args:
@@ -70,12 +74,3 @@ def read_robots(token: str):
     if "'>' not supported between instances of 'int' and 'str'" in msg:
         raise HTTPException(status_code=401, detail="No autorizado, debe logearse")
     return msg
-
-
-@robot_end_points.get("/image")
-def get_image(token, robot_id):
-    image_name = get_image_name(token, robot_id)
-    path = "routers/robots/avatars/" + image_name
-    with open(path, "rb") as f:
-        base64image = base64.b64encode(f.read())
-    return base64image

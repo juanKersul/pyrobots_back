@@ -5,7 +5,7 @@ from security.password import decrypt_password
 from db.database import database
 from crud.user_services import check_user
 from crud.user_services import search_user
-
+from security.tokens import decode_token
 
 session_end_points = APIRouter()
 
@@ -26,3 +26,14 @@ async def user_login(username: str, password: str):
             raise HTTPException(status_code=400, detail="Contraseña incorrecta")
     else:
         raise HTTPException(status_code=400, detail="El usuario no existe")
+
+
+async def authorization(token: str):
+    if token is None:
+        raise HTTPException(status_code=401, detail="No autorizado")
+    else:
+        active, payload = decode_token(token)
+        if active:
+            return payload["username"]
+        else:
+            raise HTTPException(status_code=401, detail="No autorizado")

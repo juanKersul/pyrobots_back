@@ -24,7 +24,7 @@ def define_robots(db):
         """Crea la tabla de robots."""
         __tablename__ = "robots"
         name = Required(str, unique=True)
-        user_owner = Required("User", unique=True)
+        user_owner = Required("User")
         PrimaryKey(name, user_owner)
         matches_played = Required(int)
         matches_won = Required(int)

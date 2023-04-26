@@ -1,7 +1,6 @@
 from pony.orm import db_session
 from pony.orm import commit
 from pony.orm import rollback
-from pony.orm import select
 from exceptions.classes import OperationalError
 from pony.orm import OrmError
 
@@ -16,8 +15,8 @@ def add_robot(db, robot_name: str, username: str):
     try:
         db.Robot(
             name=robot_name,
-            matchs_played=0,
-            matchs_won=0,
+            matches_played=0,
+            matches_won=0,
             avg_life_time=0.0,
             user_owner=username,
         )
@@ -39,7 +38,8 @@ def read_robots(db, username: str):
         OperationalError: No se pudo leer la base de datos.
     """
     try:
-        return select(x for x in db.Robot if x.user_owner.username == username)
+        result = db.Robot.select(lambda r: r.user_owner.username == username)
+        return [r.to_dict(exclude="user_owner") for r in result]
     except OrmError as e:
         raise OperationalError("No se pudo leer la base de datos", e)
 
@@ -66,6 +66,7 @@ def read_robot(db, robot_name: str, username: str):
         username (str): Nombre de usuario o email.
     Returns:"""
     try:
-        return db.Robot[robot_name, username]
+        result = db.Robot[robot_name, username]
+        return result.to_dict(exclude="user_owner")
     except OrmError as e:
         raise OperationalError("No se pudo leer el robot", e)

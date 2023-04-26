@@ -36,7 +36,8 @@ async def user_register(username: str, password: str, email: str):
     else:
         encripted_password = encrypt_password(password)
         validation_code = generate_validation_code(6)
-        add_user(database, username, encripted_password, email, validation_code)
+        add_user(
+            database, username, encripted_password, email, validation_code)
         await send_confirmation_mail(email, username, validation_code)
         return {"Status": "Usuario creado con exito"}
 
@@ -62,6 +63,7 @@ def user_verification(username: str, code: str):
             update_confirmation(database, username, True)
             return {"Status": "Usuario verificado con exito"}
         else:
-            raise HTTPException(status_code=400, detail="El codigo no es valido")
+            raise HTTPException(
+                status_code=400, detail="El codigo no es valido")
     else:
         raise HTTPException(status_code=400, detail="El usuario no existe")

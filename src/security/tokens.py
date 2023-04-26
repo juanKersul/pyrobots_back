@@ -7,6 +7,8 @@ from jwt import decode
 from jwt import encode
 from jwt import PyJWTError
 from jwt import ExpiredSignatureError
+from jwt import InvalidSignatureError
+from fastapi import HTTPException
 
 # se obtienen de env
 JWT_SECRET = config("JWT_SECRET")
@@ -15,7 +17,8 @@ JWT_EXPIRES = timedelta(minutes=int(config("JWT_EXPIRES")))
 
 
 def generate_token(userID: str):
-    payload = {"userID": userID, "exp": datetime.now(tz=timezone.utc) + JWT_EXPIRES}
+    payload = {
+        "userID": userID, "exp": datetime.now(tz=timezone.utc) + JWT_EXPIRES}
     try:
         token = encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
         return token
@@ -24,7 +27,7 @@ def generate_token(userID: str):
 
 
 # esta funcion decodea el token
-def decode_token(token: str):
+def authorize_token(token: str):
     """Decodea el token
 
     Args:
@@ -35,8 +38,10 @@ def decode_token(token: str):
     """
     try:
         decode_token = decode(token, JWT_SECRET, algorithms=JWT_ALGORITHM)
-        return True, decode_token
+        return decode_token["userID"]
     except ExpiredSignatureError:
-        return False, {}
+        raise HTTPException(status_code=401, detail="sesion expirada")
+    except InvalidSignatureError:
+        raise HTTPException(status_code=401, detail="token invalido")
     except PyJWTError as e:
         raise OperationalError("No se pudo decodificar el token", e)

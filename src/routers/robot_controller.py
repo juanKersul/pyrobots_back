@@ -1,66 +1,35 @@
 from fastapi import APIRouter
 from fastapi import HTTPException
 from fastapi import UploadFile
-from crud import robot_service
+from crud.robot_service import read_robots
 from crud.robot_service import add_robot
-import base64
+from crud.robot_service import check_robot
 from fastapi import Depends
-from routers.session_controller import authorization
+from security.tokens import authorize_token
+from db.database import database
+from file_controller.store import save_file
+from file_controller.store import generate_key
 
 robot_end_points = APIRouter()
 
 
-@robot_end_points.post("/Robot")
+@robot_end_points.post("/Robots")
 async def upload_robot(
-    config: UploadFile, name: str, username: str = Depends(authorization)
+    config: UploadFile, name: str, username: str = Depends(authorize_token)
 ):
-    """Cargar Robot
-
-    Args:
-        config (UploadFile): archivo del robot.
-        avatar (UploadFile): imagen del robot.
-        name (str): nombre del robot.
-        tkn (str): token.
-        username (str): nombre de usuario.
-
-    Raises:
-        HTTPException: 409: El robot ya existe.
-        HTTPException: 400: El usuario no existe.
-        HTTPException: 422: El nombre del Robot con el archivo no se corresponden.
-        HTTPException: 440: El token no es correcto o está expirado.
-
-    Returns:
-        _type_: _description_
-    """
-    no_avatar = True
-    if avatar != None:
-        avatar_name = "P" + avatar.filename
-        no_avatar = False
+    if check_robot(database, name, username):
+        raise HTTPException(
+            status_code=400, detail="ya existe un robot con el nomre" + name
+        )
     else:
-        avatar_name = "default.jpeg"
-    msg = add_robot(config, avatar_name, name, tkn)
-    # El robot ya existe
-    if "ya existe" in msg:
-        raise HTTPException(status_code=409, detail=msg)
-    # Los nombres para el robot no se corresponden
-    if "requisitos" in msg:
-        raise HTTPException(status_code=422, detail=msg)
-    # Token invalido o expirado
-    if "Token" in msg:
-        raise HTTPException(status_code=440, detail="Sesión expirada")
-    # Tomamos el nombre del usuario y el nombre del archivo
-    username = msg.split(":")[1]
-    avatar_name = msg.split(":")[2]
-    msg = msg.split(":")[0]
-    store_config(config, username)
-    if not no_avatar:
-        avatar.filename = avatar_name
-        store_avatar(avatar)
-    return {"msg": msg}
+        add_robot(database, name, username)
+        key = generate_key(name, username)
+        save_file(config, key + ".py", "../robots_files/")
+        return "robot agregado"
 
 
 @robot_end_points.get("/Robots")
-def read_robots(token: str = Depends(authorization)):
+async def get_robots(username: str = Depends(authorize_token)):
     """Listar Robots
 
     Args:
@@ -70,7 +39,8 @@ def read_robots(token: str = Depends(authorization)):
         str: Error
         List[Robots]: Lista de robots.
     """
-    msg = robot_service.read_robots(token)
-    if "'>' not supported between instances of 'int' and 'str'" in msg:
-        raise HTTPException(status_code=401, detail="No autorizado, debe logearse")
-    return msg
+    robots = read_robots(database, username)
+    return robots
+
+    # convertir robots en json
+    # return robots

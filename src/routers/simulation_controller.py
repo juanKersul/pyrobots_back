@@ -1,47 +1,34 @@
 from fastapi import APIRouter
-from schemas import isim
 from crud import robot_service as sc
 from game.robot_class import Robot
 from random import randint
+from fastapi import Depends
+from security.tokens import authorize_token
 
 simulation_end_points = APIRouter()
 
 
-@simulation_end_points.post("/Simulation")
-async def create_simulation(simulation: isim.SimulationCreate):
-    """Crea una simulación.
-
-    Args:
-        simulation (isim.SimulationCreate): Simulación con todos sus campos.
-
-    Returns:
-        List[Any]: Lista con rondas.
-    """
-    id_robot_parsed = simulation.id_robot.split(",")
-    outer_response = []
-    robots = []
-    for x in id_robot_parsed:
-        file = get_file_by_id(x)
-        if "default1" in file:
-            file = "default1.py"
-        elif "default2" in file:
-            file = "default2.py"
-
-        filename = "routers/robots/" + file
+@simulation_end_points.get("/Simulation")
+async def run_simulation(
+    robots: frozenset,
+    rounds: int,
+    games: int,
+    username: str = Depends(authorize_token)
+):
+    for robot in robots:
+        filename = generate_key(robot, username) + ".py"
         try:
-            exec(
-                open(filename).read(),
-                globals(),
-            )
-            file = file.strip(".py")
-            file = file.split("_")[0]
-            klass = globals()[file]
-            r = klass((randint(100, 800), randint(100, 800)), randint(0, 360))
-            robots.append(r)
-        except:
-            r = Robot((randint(100, 800), randint(100, 800)), randint(0, 360))
-            r.current_damage = 0
-            robots.append(r)
+            ## EXECUTE FILE WITH PYTHON
+                #exec(
+                #    open(filename).read(),
+                #    globals(),
+                #)
+                #file = file.strip(".py")
+                #klass = globals()[file]
+            #INICIALIZAR LA CLASE    
+                #r = klass((randint(100, 800), randint(100, 800)), randint(0, 360))
+            #METER EL OBJETO EN UNA LISTA
+            #robots.append(r)
 
     # for i in range(simulation.n_rounds_simulations):
     outer_response = game(robots, simulation.n_rounds_simulations)

@@ -1,5 +1,4 @@
 from math import sin, cos, pi, sqrt, degrees, atan2
-from decouple import config
 
 ACELERATION_FACTOR = 10
 MAX_VELOCITY = 100

@@ -2,6 +2,7 @@ from routers.robot.robot_class import Robot
 from typing import Optional
 from random import randint
 
+
 class default2(Robot):
     round: int
     state: Optional[str]
@@ -14,7 +15,7 @@ class default2(Robot):
 
     def respond(self):
         try:
-            if self.state == None:
+            if self.state is None:
                 self.state = "searching"
                 self.searching_last_direction = randint(0, 360)
                 self.point_scanner(self.searching_last_direction, 1)

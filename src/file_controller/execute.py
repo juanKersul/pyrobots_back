@@ -1,4 +1,4 @@
-from game.robot_class import Robot
+from src.game.command import Robot
 
 
 def execute_file(path: str, filename: str):

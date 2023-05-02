@@ -17,8 +17,7 @@ JWT_EXPIRES = timedelta(minutes=int(config("JWT_EXPIRES")))
 
 
 def generate_token(userID: str):
-    payload = {
-        "userID": userID, "exp": datetime.now(tz=timezone.utc) + JWT_EXPIRES}
+    payload = {"userID": userID, "exp": datetime.now(tz=timezone.utc) + JWT_EXPIRES}
     try:
         token = encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
         return token
@@ -28,14 +27,6 @@ def generate_token(userID: str):
 
 # esta funcion decodea el token
 def authorize_token(token: str):
-    """Decodea el token
-
-    Args:
-        token (str): token
-
-    Returns:
-        Dict[str, Any]: {"userID": "", "expiry": 0}
-    """
     try:
         decode_token = decode(token, JWT_SECRET, algorithms=JWT_ALGORITHM)
         return decode_token["userID"]

@@ -1,6 +1,6 @@
 from cryptography.fernet import Fernet
 
-KEY_CRYPT = b'ZmDfcTF7_60GrrY167zsiPd67pEvs0aGOv2oasOM1Pg='
+KEY_CRYPT = b"ZmDfcTF7_60GrrY167zsiPd67pEvs0aGOv2oasOM1Pg="
 
 
 def decrypt_password(password: str):

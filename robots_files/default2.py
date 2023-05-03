@@ -3,7 +3,7 @@ from typing import Optional
 from random import randint
 
 
-class default2(Robot):
+class default2(Command):
     round: int
     state: Optional[str]
 

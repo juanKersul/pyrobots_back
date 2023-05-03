@@ -1,18 +1,19 @@
 from math import sqrt
 from math import degrees
 from math import atan2
-from math import pi
-from math import sin
-from math import cos
 from abc import ABC, abstractmethod
+from game.math import distance, polar_to_rect, amplitude_to_depth
+from game.command import Command
 
 
-class Game_Robot(ABC):
+class GameRobot(ABC):
     def __init__(self):
         self.life
-        self.position
+        self.position_X
+        self.position_Y
         self.name
-        self.direction
+        self.misil_position_X
+        self.misil_position_Y
 
     @abstractmethod
     def initialize(self):
@@ -38,101 +39,120 @@ class Game_Robot(ABC):
         return {
             "name": self.name,
             "life": self.life,
-            "position": self.position,
-            "direction": self.direction,
+            "positionX": self.position_X,
+            "positionY": self.position_Y,
+            "misil_position_X": self.misil_position_X,
+            "misil_position_Y": self.misil_position_Y,
         }
 
+    @abstractmethod
+    def get_damage(self, positions: list[tuple], damage: int, radius):
+        pass
 
-class Py_Robot(Game_Robot):
+    def get_position(self):
+        return (self.position_X, self.position_Y)
+
+    def get_misil_position(self):
+        return (self.misil_position_X, self.misil_position_Y)
+
+
+class Py_Robot(GameRobot):
     def __init__(
         self,
-        initial_position: tuple = (None, None, None),
+        initial_position: tuple = (None, None),
         life: int = 100,
         name: str = "Py_Robot",
+        command: Command = None,
     ):
+        self.command = command
         self.name = name
-        self.current_position = initial_position
-        self.current_velocity = 0
-        self.cannon_ammo = 1
-        self.misil_position = (None, None)
-        self.cannon_target = (None, None)
-        self.scanner_target = (None, None)
-        self.last_position = initial_position
         self.life = life
 
-        self.required_position = (None, None, None)
-        self.required_velocity = 0
+        self.position_X = initial_position[0]
+        self.position_Y = initial_position[1]
+        self.misil_position_X = None
+        self.misil_position_Y = None
         self.scan_result = None
 
-    def _distance(t1: tuple, t2: tuple):
-        res = round(sqrt((t2[0] - t1[0]) ** 2 + (t2[1] - t1[1]) ** 2))
-        return res
+        self.cannon_target_ang
+        self.cannon_target_dis
+        self.active_cannon = False
 
-    def _polar_to_rect(ang, distance, origin):
-        radian = float(ang * pi / 180)
-        x = round(origin[0] + distance * cos(radian))
-        y = round(origin[1] + distance * sin(radian))
-        if x <= 0:
-            x = 0
-        if x >= 999:
-            x = 999
-        if y <= 0:
-            y = 0
-        if y >= 999:
-            y = 999
-        return (x, y)
+        self.scanner_target_ang
+        self.scanner_target_amp
+        self.active_scanner = False
 
-    def _amplitude_to_depth(degre):
-        result = -7.5 * (degre * 9) + 867
-        return round(result)
+        self.direction = 0
+        self.velocity = 0
+
+    def initialize(self):
+        try:
+            self.command.initialize()
+        except Exception:
+            self.life = 0
+
+    def respond(self):
+        try:
+            self.command.set_atributes(
+                self.position_X,
+                self.position_Y,
+                self.life,
+                self.scan_result,
+            )
+            self.command.respond()
+            (
+                self.cannon_target_ang,
+                self.cannon_target_dis,
+                self.active_cannon,
+                self.scanner_target_ang,
+                self.scanner_target_amp,
+                self.active_scanner,
+            ) = self.command.get_atributes()
+        except Exception:
+            self.life = 0
 
     def shoot(self):
-        misil_target = (None, None)
-        if self.cannon_ammo <= 1:
-            self.cannon_ammo = 0
-            misil_target = self._polar_to_rect(
-                ang=self.cannon_degree,
-                distance=self.cannon_distance,
-                origin=self.current_position,
+        self.misil_position_X = None
+        self.misil_position_Y = None
+        if self.active_cannon:
+            misil_cordinates = polar_to_rect(
+                ang=self.cannon_target_ang,
+                distance=self.cannon_target_dis,
+                origin=(self.position_X, self.position_Y),
             )
-            self.misil_position = misil_target
-            self.cannon_shoot = False
-        else:
-            self.cannon_ammo = 1
-        self.misil_position = misil_target
+            self.misil_position_X = misil_cordinates[0]
+            self.misil_position_Y = misil_cordinates[1]
+            self.active_cannon = False
 
     def move(self):
-        # seting direction
-        self.current_direction = self.required_direction
-        # seting velocity
-        self.current_velocity = self.required_velocity
-        # seting position
-        self.current_position = self._polar_to_rect(
-            self.required_direction, self.required_velocity, self.current_position
+        self.position_X, self.position_Y = polar_to_rect(
+            self.direction, self.velocity, (self.position_X, self.position_Y)
         )
         # wall colision
         if (
-            self.current_position[0] == 0
-            or self.current_position[0] == 999
-            or self.current_position[1] == 0
-            or self.current_position[1] == 999
+            self.position_X == 0
+            or self.position_X == 999
+            or self.position_Y == 0
+            or self.position_Y == 999
         ):
             self.life -= 5
 
     def scan(self, robots_position: list):
         # centrar el origen a la de main_pos
-        main_pos = self.current_position
-        robots_c = [(r[0] - main_pos[0], r[1] - main_pos[1]) for r in robots_position]
+        main_pos = (self.position_X, self.position_Y)
+        robots_centered = [
+            (r[0] - main_pos[0], r[1] - main_pos[1]) for r in robots_position
+        ]
         # calcular cordenadas polares
-        robots_p = [
+        robots_polar_cordinates = [
             (degrees(atan2(r[1], r[0])) % 360, sqrt(r[0] ** 2 + r[1] ** 2))
-            for r in robots_c
+            for r in robots_centered
         ]
         # filtrar segun distancia y angulo correcto
         amplitude = self.resolution_in_degrees * 5
-        max_distance = self._amplitude_to_depth(self.resolution_in_degrees)
+        max_distance = amplitude_to_depth(self.resolution_in_degrees)
         robots_f = [1500]
-        for robot in robots_p:
+        for robot in robots_polar_cordinates:
             angleDiff = (self.direction_scanner - robot[0] + 180 + 360) % 360 - 180
             if (
                 angleDiff >= -amplitude
@@ -146,5 +166,5 @@ class Py_Robot(Game_Robot):
 
     def get_damage(self, positions: list[tuple], damage: int, radius):
         for position in positions:
-            if self._distance(position, self.current_position) <= radius:
+            if distance(position, self.position) <= radius:
                 self.life -= damage

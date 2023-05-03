@@ -5,6 +5,7 @@ from crud.robot_service import check_robot
 from fastapi import HTTPException
 from file_controller.store import generate_key
 from file_controller.execute import execute_file
+from game.game import BaseGame
 
 simulation_end_points = APIRouter()
 
@@ -28,13 +29,8 @@ async def run_simulation(
     results_list = []
     # run games
     for i in range(games):
-        game = Game(robot_object_list, rounds)
-        game.run()
+        game = BaseGame(robot_object_list)
+        game.run(rounds)
         results = game.get_results()
         results_list.append(results)
     return results_list
-
-    # CREAR UN OBJETO GAME
-    # outer_response = game(robots, simulation.n_rounds_simulations)
-    # EJECUTAR GAME CON LOS PARAMETROS
-    # GENERAR RESPUESTA

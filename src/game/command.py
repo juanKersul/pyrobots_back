@@ -4,19 +4,21 @@ from abc import ABC, abstractmethod
 class Command(ABC):
     def __init__(self):
         # current
-        self.current_position = (None, None)
-        self.current_direction = 0
-        self.currrent_velocity = 0
-        self.cannon_ammo = 1
-        self.life = 100
-        self.scan_result = 1500
+        self.position_x
+        self.position_y
+        self.life
+        self.scan_result
         # required
-        self.required_position = (None, None)
-        self.required_direction = 0
-        self.required_velocity = 0
-        self.cannon_degree = 0
-        self.cannon_distance = 0
-        self.scanner_direction = 0
+        self.cannon_target_ang
+        self.cannon_target_dis
+        self.active_cannon
+
+        self.scanner_target_ang
+        self.scanner_target_amp
+        self.active_scanner
+
+        self.direction
+        self.velocity
 
     # abstract methods
     @abstractmethod
@@ -32,20 +34,8 @@ class Command(ABC):
     def get_position(self):
         return self.current_position
 
-    def get_velocity(self):
-        return self.currrent_velocity
-
     def get_damage(self):
         return self.life
-
-    def get_direction(self):
-        return self.current_direction
-
-    def is_cannon_ready(self):
-        """Cuando se dispara un misil, el cañón requiere un tiempo
-        para recargarse. Se puede usar esta función para chequear si
-        el cañón está completamente recargado"""
-        return self.cannon_ammo == 1
 
     def scanned(self):
         """Devuelve el resultado del escaneo de la ronda previo. Devuelve la
@@ -58,8 +48,8 @@ class Command(ABC):
 
     # setters
     def drive(self, degree, velocity):
-        self.required_direction = degree
-        self.required_velocity = velocity
+        self.direction = degree
+        self.velocity = velocity
 
     def cannon(self, degree, distance):
         """Cuando se llama a este método, se prepara el cañón para disparar.
@@ -70,17 +60,9 @@ class Command(ABC):
             degree (Any): Grados a lo que voy a disparar.
             distance (Any): Distancia a la que voy a disparar.
         """
-        if distance > 700:
-            distance = 700
-        if distance < 0:
-            distance = 0
-        if degree > 360:
-            degree = 360
-        if degree < 0:
-            degree = 0
-        self.cannon_shoot = True
-        self.cannon_degree = degree
-        self.cannon_distance = distance
+        self.cannon_target_ang = degree
+        self.cannon_target_dis = distance
+        self.active_cannon = True
 
     def point_scanner(self, direction, resolution_in_degrees):
         """Con este método se puede apuntar el escáner en cualquier dirección.
@@ -91,10 +73,22 @@ class Command(ABC):
             direction (Any): Dirección a la que se desea apuntar el scanner.
             resolution_in_degrees (Any): Amplitud del scanner.
         """
-        if direction < 0:
-            direction = -direction
-        elif direction >= 360:
-            direction %= 360
+        self.scanner_target_ang = direction
+        self.scanner_target_amp = resolution_in_degrees
+        self.active_scanner = True
 
-        self.direction_scanner = direction
-        self.resolution_in_degrees = resolution_in_degrees
+    def get_atributes(self):
+        return (
+            self.cannon_target_ang,
+            self.cannon_target_dis,
+            self.active_cannon,
+            self.scanner_target_ang,
+            self.scanner_target_amp,
+            self.active_scanner,
+        )
+
+    def set_atributes(self, position_x, position_y, life, scan_result):
+        self.position_x = position_x
+        self.position_y = position_y
+        self.life = life
+        self.scan_result = scan_result

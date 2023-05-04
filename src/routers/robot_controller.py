@@ -8,7 +8,6 @@ from fastapi import Depends
 from security.tokens import authorize_token
 from db.database import database
 from file_controller.store import save_file
-from file_controller.store import generate_key
 
 robot_end_points = APIRouter()
 
@@ -23,8 +22,7 @@ async def upload_robot(
         )
     else:
         add_robot(database, name, username)
-        key = generate_key(name, username)
-        save_file(config, key + ".py", "../robots_files/")
+        save_file(config, name + ".py", "../robots_files/" + username + "/")
         return "robot agregado"
 
 

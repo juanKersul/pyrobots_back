@@ -2,10 +2,13 @@ from game.Robot import GameRobot
 
 
 class BaseGame:
-    def __init__(self, robots: list[GameRobot], rules: dict):
+    def __init__(self, robots: list[GameRobot]):
         self.robots = robots
-        self.rules = rules
         self.results = []
+
+    def initialize(self):
+        for robot in self.robots:
+            robot.initialize()
 
     def run(self, rounds):
         for robot in self.robots:
@@ -15,7 +18,8 @@ class BaseGame:
                 robot.respond()
             for robot in self.robots:
                 robots_copy = self.robots.copy()
-                other_robots = robots_copy.remove(robot)
+                robots_copy.remove(robot)
+                other_robots = robots_copy
                 other_robots_pos = [r.get_position() for r in other_robots]
                 robot.scan(other_robots_pos)
             for robot in self.robots:
@@ -24,10 +28,13 @@ class BaseGame:
                 robot.move()
             for robot in self.robots:
                 robots_copy = self.robots.copy()
-                other_robots = robots_copy.remove(robot)
+                robots_copy.remove(robot)
+                other_robots = robots_copy
                 other_robots_misil_position = [
                     r.get_misil_position() for r in other_robots
                 ]
+                other_robots_misil_position.remove((None, None))
+                print(other_robots_misil_position)
                 robot.get_damage(other_robots_misil_position, 20, 5)
             self.results.append(
                 {

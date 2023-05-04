@@ -1,5 +1,7 @@
 from fastapi import UploadFile
 from shutil import copyfileobj
+from os import mkdir
+from exceptions.classes import OperationalError
 
 
 def save_file(file: UploadFile, new_name: str, destination: str) -> None:
@@ -11,14 +13,8 @@ def save_file(file: UploadFile, new_name: str, destination: str) -> None:
         file.file.close()
 
 
-def generate_key(str1: str, str2: str) -> str:
-    """Genera una clave para unir dos strings
-
-    Args:
-        str1 (str): string 1
-        str2 (str): string 2
-
-    Returns:
-        str: clave
-    """
-    return str(hash(str1 + " " + str2))
+def create_directory(path: str) -> None:
+    try:
+        mkdir(path)
+    except OSError:
+        raise OperationalError("failed to create directory")

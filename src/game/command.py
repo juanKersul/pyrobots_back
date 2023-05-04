@@ -4,21 +4,21 @@ from abc import ABC, abstractmethod
 class Command(ABC):
     def __init__(self):
         # current
-        self.position_x
-        self.position_y
-        self.life
-        self.scan_result
+        self.position_x = None
+        self.position_y = None
+        self.life = None
+        self.scan_result = None
         # required
-        self.cannon_target_ang
-        self.cannon_target_dis
-        self.active_cannon
+        self.cannon_target_ang = None
+        self.cannon_target_dis = None
+        self.active_cannon = None
 
-        self.scanner_target_ang
-        self.scanner_target_amp
-        self.active_scanner
+        self.scanner_target_ang = None
+        self.scanner_target_amp = None
+        self.active_scanner = None
 
-        self.direction
-        self.velocity
+        self.direction = None
+        self.velocity = None
 
     # abstract methods
     @abstractmethod

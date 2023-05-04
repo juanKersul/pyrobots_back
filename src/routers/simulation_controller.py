@@ -3,34 +3,30 @@ from fastapi import Depends
 from security.tokens import authorize_token
 from crud.robot_service import check_robot
 from fastapi import HTTPException
-from file_controller.store import generate_key
 from file_controller.execute import execute_file
 from game.game import BaseGame
+from db.database import database
+from schemas.simulation import Simulation
+from game.Robot import Py_Robot
 
 simulation_end_points = APIRouter()
 
 
-@simulation_end_points.get("/Simulation")
-async def run_simulation(
-    robots: frozenset, rounds: int, games: int, username: str = Depends(authorize_token)
-):
+@simulation_end_points.post("/Simulation")
+async def run_simulation(params: Simulation, username: str = Depends(authorize_token)):
     # check if robots exist
-    for robot in robots:
-        if not check_robot(robot, username):
+    for robot_name in params.robots:
+        if not check_robot(database, robot_name, username):
             raise HTTPException(status_code=404, detail="Robot not found")
     robot_object_list = []
     # generate robot objects
-    for robot in robots:
-        filename = generate_key(robot, username)
-        path = "../robots_files/" + filename + ".py"
-        robot_class = execute_file(path, filename)
-        robot_object = robot_class()
+    for robot_name in params.robots:
+        path = "../robots_files/" + username + "/" + robot_name + ".py"
+        command_object = execute_file(path, robot_name)
+        robot_object = Py_Robot((10, 10), 100, "algo", command_object)
         robot_object_list.append(robot_object)
-    results_list = []
-    # run games
-    for i in range(games):
-        game = BaseGame(robot_object_list)
-        game.run(rounds)
-        results = game.get_results()
-        results_list.append(results)
-    return results_list
+    # run game
+    game = BaseGame(robot_object_list)
+    game.run(params.rounds)
+    results = game.get_results()
+    return results

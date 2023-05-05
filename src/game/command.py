@@ -4,17 +4,14 @@ from abc import ABC, abstractmethod
 class Command(ABC):
     def __init__(self):
         # current
-        self.position_x = None
-        self.position_y = None
+        self.position = (None, None)
         self.life = None
         self.scan_result = None
         # required
-        self.cannon_target_ang = None
-        self.cannon_target_dis = None
+        self.cannon_target = (None, None)
         self.active_cannon = None
 
-        self.scanner_target_ang = None
-        self.scanner_target_amp = None
+        self.scanner_target = (None, None)
         self.active_scanner = None
 
         self.direction = None
@@ -31,10 +28,13 @@ class Command(ABC):
 
     # getters
 
-    def get_position(self):
-        return self.current_position
+    def get_direction(self):
+        return self.direction
 
-    def get_damage(self):
+    def get_position(self):
+        return self.position
+
+    def get_life(self):
         return self.life
 
     def scanned(self):
@@ -60,8 +60,7 @@ class Command(ABC):
             degree (Any): Grados a lo que voy a disparar.
             distance (Any): Distancia a la que voy a disparar.
         """
-        self.cannon_target_ang = degree
-        self.cannon_target_dis = distance
+        self.cannon_target = (degree, distance)
         self.active_cannon = True
 
     def point_scanner(self, direction, resolution_in_degrees):
@@ -73,22 +72,22 @@ class Command(ABC):
             direction (Any): Dirección a la que se desea apuntar el scanner.
             resolution_in_degrees (Any): Amplitud del scanner.
         """
-        self.scanner_target_ang = direction
-        self.scanner_target_amp = resolution_in_degrees
+        self.scanner_target = (direction, resolution_in_degrees)
         self.active_scanner = True
 
-    def get_atributes(self):
+    def get_state(self):
         return (
-            self.cannon_target_ang,
-            self.cannon_target_dis,
+            self.cannon_target,
             self.active_cannon,
-            self.scanner_target_ang,
-            self.scanner_target_amp,
+            self.scanner_target,
             self.active_scanner,
+            self.velocity,
+            self.direction,
         )
 
-    def set_atributes(self, position_x, position_y, life, scan_result):
-        self.position_x = position_x
-        self.position_y = position_y
+    def set_state(self, position, life, scan_result):
+        self.position = position
         self.life = life
         self.scan_result = scan_result
+        self.active_cannon = False
+        self.active_scanner = False

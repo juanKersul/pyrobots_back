@@ -34,7 +34,6 @@ class BaseGame:
                     r.get_misil_position() for r in other_robots
                 ]
                 other_robots_misil_position.remove((None, None))
-                print(other_robots_misil_position)
                 robot.get_damage(other_robots_misil_position, 20, 5)
             self.results.append(
                 {

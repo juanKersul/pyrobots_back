@@ -23,7 +23,7 @@ async def run_simulation(params: Simulation, username: str = Depends(authorize_t
     for robot_name in params.robots:
         path = "../robots_files/" + username + "/" + robot_name + ".py"
         command_object = execute_file(path, robot_name)
-        robot_object = Py_Robot((10, 10), 100, "algo", command_object)
+        robot_object = Py_Robot(robot_name, command_object)
         robot_object_list.append(robot_object)
     # run game
     game = BaseGame(robot_object_list)

@@ -21,6 +21,7 @@ async def upload_robot(
             status_code=400, detail="ya existe un robot con el nomre" + name
         )
     else:
+        
         add_robot(database, name, username)
         save_file(config, name + ".py", "../robots_files/" + username + "/")
         return "robot agregado"
@@ -40,5 +41,3 @@ async def get_robots(username: str = Depends(authorize_token)):
     robots = read_robots(database, username)
     return robots
 
-    # convertir robots en json
-    # return robots

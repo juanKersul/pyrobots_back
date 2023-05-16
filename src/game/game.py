@@ -33,7 +33,10 @@ class BaseGame:
                 other_robots_misil_position = [
                     r.get_misil_position() for r in other_robots
                 ]
-                other_robots_misil_position.remove((None, None))
+                try:
+                    other_robots_misil_position.remove((None, None))
+                except ValueError:
+                    pass
                 robot.get_damage(other_robots_misil_position, 20, 5)
             self.results.append(
                 {

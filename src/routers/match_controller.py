@@ -1,83 +1,124 @@
 from fastapi import APIRouter
 from fastapi import HTTPException
-from fastapi import WebSocket
-from schemas import imatch
-from crud import match_service
-from websockets2 import websocket_services
-
+from crud.match_service import create_match
+from crud.match_service import add_player
+from crud.user_services import check_user
+from crud.robot_service import check_robot
+from crud.match_service import read_matchs
+from crud.match_service import check_match
+from crud.match_service import get_match
+from crud.match_service import check_match_is_full
+from fastapi import Depends
+from security.tokens import authorize_token
+from db.database import database
+from websockets2.websocket_services import server
+from file_controller.execute import execute_file
+from game.Robot import Py_Robot
+from game.game import BaseGame
 
 match_end_points = APIRouter()
 
-manager = websocket_services.ConnectionManager()
 
-
-@match_end_points.post("/match/add")
-async def create_match(match: imatch.MatchCreate):
-    msg = match_service.create_match(match)
-    if "IntegrityError" in msg and "name" in msg:
-        raise HTTPException(status_code=409, detail="El nombre de la partida ya existe")
-    if "ObjectNotFound" in msg:
-        raise HTTPException(status_code=400, detail="El usuario o email no existe")
-    response = match_service.get_match_id(match.name)
-    return {"id_match": response}
-
-
-@match_end_points.post("/match/run")
-async def start_match(id_match: int, token: str):
-    robot_list = match_service.start_game(id_match, token)
-    if "Status" in robot_list:
-        return robot_list
-    if "Token no valido" in robot_list:
+@match_end_points.post("/match")
+async def add_match(
+    robot: str,
+    max_players: int,
+    password: str,
+    max_rounds: int,
+    username: str = Depends(authorize_token),
+):
+    if check_user(database, username):
+        if check_robot(database, robot, username):
+            key = server.new_sub()
+            match = create_match(
+                database, username, max_players, password, max_rounds, key
+            )
+            add_player(database, match, robot, username)
+            return {"id_match": match, "key": key}
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail="Robot no encontrado",
+            )
+    else:
         raise HTTPException(
             status_code=400,
-            detail="Sesión expirada",
+            detail="Usuario no encontrado",
         )
-    if "ObjectNotFound" in robot_list:
+
+
+@match_end_points.put("/match/{id_match}/join")
+async def join_match(
+    robot: str, id_match: int, username: str = Depends(authorize_token)
+):
+    if check_user(database, username):
+        if check_robot(database, robot, username):
+            if check_match(database, id_match):
+                if not check_match_is_full(database, id_match):
+                    key = get_match(database, id_match)["key"]
+                    add_player(database, id_match, robot, username)
+                    return {"key": key}
+
+                else:
+                    raise HTTPException(
+                        status_code=400,
+                        detail="Partida llena",
+                    )
+            else:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Partida no encontrada",
+                )
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail="Robot no encontrado",
+            )
+    else:
         raise HTTPException(
             status_code=400,
-            detail="La cantidad de jugadores no coincide con los parámetros de la partida",
+            detail="Usuario no encontrado",
         )
-    if "'>' not supported between instances of 'int' and 'str'" in robot_list:
-        raise HTTPException(status_code=401, detail="No autorizado, debe loguearse")
-    n_rounds = match_service.get_match_rounds(id_match)
-    n_games = match_service.get_match_games(id_match)
-    robots = match_service.parse_robots(robot_list)
-    outer_response = match_service.add_robot_attributes(
-        n_games, n_rounds, robots, robot_list
-    )
-    juego = match_service.games_last_round(outer_response)
-    resultado = match_service.get_winners(juego)
-    ganador = match_service.return_results(resultado)
 
-    await manager.broadcast_json(id_match, {"status": "Iniciando partida"})
-    await manager.broadcast_json(id_match, ganador)
-    in_match = list(manager.active_connections[id_match].keys())
-    in_match.reverse()
-    for users in in_match:
-        await manager.disconnect(
-            id_match, users, manager.active_connections[id_match][users]
+
+@match_end_points.get("/match/{id_match}/start")
+async def start_match(id_match: int, username: str = Depends(authorize_token)):
+    if check_user(database, username):
+        if check_match(database, id_match):
+            match = get_match(database, id_match)
+            if match["user_creator"] == username:
+                robot_object_list = []
+                for robots in match["robots_in_match"]:
+                    path = "../robots_files/" + robots[1] + "/" + robots[0] + ".py"
+                    print(path)
+                    command_object = execute_file(path, robots[0])
+                    robot_object = Py_Robot(robots[1], command_object)
+                    robot_object_list.append(robot_object)
+                game = BaseGame(robot_object_list)
+                game.run(match["n_rounds"])
+                results = game.get_results()
+                server.send_message_to_subscribers(match["key"], results)
+                return "partida iniciada con exito"
+            else:
+                raise HTTPException(
+                    status_code=400,
+                    detail="no eres el creador de la partida",
+                )
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail="Partida no encontrada",
+            )
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail="Usuario no encontrado",
         )
-    match_service.delete_match(id_match)
-    return ganador
-
-
-@match_end_points.websocket("/ws/match/{id_game}/{tkn}/{id_robot}")
-async def join_match(websocket: WebSocket, id_game: int, tkn: str, id_robot: int):
-    await manager.connect(websocket, id_game, tkn, id_robot)
 
 
 @match_end_points.get("/matchs")
-async def read_matchs(token: str):
-    """Lista las partidas
-
-    Args:
-        token (str): recibe el token
-
-    Returns:
-        str: Error.
-        List[Match]: Lista de partidas.
-    """
-    msg = match_service.read_matchs(token)
-    if "'>' not supported between instances of 'int' and 'str'" in msg:
-        raise HTTPException(status_code=401, detail="No autorizado, debe logearse")
-    return msg
+async def get_matchs(username: str = Depends(authorize_token)):
+    if check_user(database, username):
+        return read_matchs(database)
+    else:
+        raise HTTPException(status_code=400, detail="Usuario no encontrado")

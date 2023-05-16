@@ -12,8 +12,8 @@ def create_match(
     user_creator: str,
     max_players: int,
     password: str,
-    max_matches: int,
     max_rounds: int,
+    new_key: str,
 ) -> int:
     """_summary_
 
@@ -37,10 +37,9 @@ def create_match(
         new_match = db.Match(
             max_players=max_players,
             password=password,
-            n_matches=max_matches,
             n_rounds=max_rounds,
             user_creator=user,
-            active=False,
+            key=new_key,
         )
         commit()
         return new_match.get_pk()
@@ -61,7 +60,11 @@ def read_matchs(db):
         List[Match]: Lista de partidas.
     """
     try:
-        return select(x for x in db.Match if db.Match.active is True)
+        result = select(x for x in db.Match)
+        return [
+            r.to_dict(exclude="key", with_collections=True, related_objects=False)
+            for r in result
+        ]
     except OrmError as e:
         raise OperationalError("failed to read matches", e)
 
@@ -100,7 +103,7 @@ def add_player(db, id_match: int, robot_name: str, user_name: str):
 
 
 @db_session
-def chech_match_is_full(db, id_match: int) -> bool:
+def check_match_is_full(db, id_match: int) -> bool:
     """
     Comprueba si la partida esta llena.
     args:
@@ -115,6 +118,22 @@ def chech_match_is_full(db, id_match: int) -> bool:
     if len(match.robots_in_match) == match.max_players:
         return True
     return False
+
+
+@db_session
+def get_match(db, id_match: int):
+    """
+    Devuelve una partida.
+    args:
+        id_match: id de la partida
+    raises:
+        OperationalError: fallo buscar partida
+    """
+    try:
+        match = db.Match[id_match]
+    except OrmError as e:
+        raise OperationalError("fallo buscar partida", e)
+    return match.to_dict(with_collections=True, related_objects=False)
 
 
 @db_session
@@ -177,21 +196,3 @@ def check_match(db, id_match: int):
         return db.Match.exists(id=id_match)
     except OrmError as e:
         raise OperationalError("fallo buscar partida", e)
-
-
-@db_session
-def active_match(db, id_match: int):
-    """
-    Activa una partida.
-    args:
-        id_match: id de la partida
-    raises:
-        OperationalError: fallo activar partida
-    """
-    try:
-        match = db.Match[id_match]
-        match.active = True
-        commit()
-    except OrmError as e:
-        rollback()
-        raise OperationalError("fallo activar partida", e)

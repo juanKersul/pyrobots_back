@@ -50,7 +50,8 @@ class WebSocketServer:
     async def main(self):
         # Iniciar el servidor WebSocket
         async with websockets.serve(self.handle_connection, self.host, self.port):
+            print("algo")
             await asyncio.Future()  # Correr el servidor para siempre
 
 
-server = WebSocketServer(8765, "")
+server = WebSocketServer(8765, "localhost:")

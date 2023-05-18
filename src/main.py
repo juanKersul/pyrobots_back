@@ -36,5 +36,4 @@ app.include_router(simulation_end_points)
 app.include_router(session_end_points)
 
 # iniciar websocket server
-if __name__ == "__main__":
-    asyncio.run(server.main())
+asyncio.run(server.main())

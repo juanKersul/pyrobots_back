@@ -1,4 +1,3 @@
-from routers.robot.robot_class import Robot
 from typing import Optional
 from random import randint
 

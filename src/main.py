@@ -7,8 +7,7 @@ from routers.session_controller import session_end_points
 from fastapi.middleware.cors import CORSMiddleware
 from db.database import map_database
 from db.database import database
-from websockets2.websocket_services import server
-import asyncio
+from routers.websocket_controller import websocket_endpoints
 
 # Definiendo la aplicacion
 app = FastAPI()
@@ -34,6 +33,5 @@ app.include_router(match_end_points)
 app.include_router(robot_end_points)
 app.include_router(simulation_end_points)
 app.include_router(session_end_points)
+app.include_router(websocket_endpoints)
 
-# iniciar websocket server
-asyncio.run(server.main())

@@ -57,6 +57,9 @@ async def join_match(
                 if not check_match_is_full(database, id_match):
                     key = get_match(database, id_match)["key"]
                     add_player(database, id_match, robot, username)
+                    await server.send_message_to_subscribers(
+                        key, username + " se ha unido"
+                    )
                     return {"key": key}
 
                 else:
@@ -97,7 +100,7 @@ async def start_match(id_match: int, username: str = Depends(authorize_token)):
                 game = BaseGame(robot_object_list)
                 game.run(match["n_rounds"])
                 results = game.get_results()
-                server.send_message_to_subscribers(match["key"], results)
+                await server.send_message_to_subscribers(results, match["key"])
                 return "partida iniciada con exito"
             else:
                 raise HTTPException(

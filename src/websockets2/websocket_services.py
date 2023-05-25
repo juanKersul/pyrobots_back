@@ -1,29 +1,31 @@
-import websockets
-import asyncio
-import json
+from fastapi import WebSocket, WebSocketDisconnect
 import secrets
 
 
-class WebSocketServer:
-    def __init__(self, port, host) -> None:
+class SubscriptionServer:
+    def __init__(self) -> None:
         self.events = {}
-        self.port = port
-        self.host = host
 
     async def send_message_to_subscribers(self, message, key):
         # Enviar mensaje a cada cliente suscrito
         try:
-            subscriptions = self.events[key]
-            for subscriber in subscriptions:
-                await subscriber.send(message)
+            print(self.events[key])
+            for subscriber in self.events[key]:
+                await subscriber.send_json(message)
         except KeyError:
             pass
-        except websockets.exceptions.ConnectionClosedOK:
+        except WebSocketDisconnect:
             pass
 
-    async def join_sub(self, key, websocket):
-        sub = self.events[key]
-        sub.append(websocket)
+    async def join_sub(self, key, websocket: WebSocket):
+        try:
+            sub = self.events[key]
+            sub.append(websocket)
+            print(sub)
+        except KeyError:
+            await websocket.send_json({"error": "No existe el evento"})
+        except WebSocketDisconnect:
+            pass
 
     def new_sub(self):
         key = secrets.token_urlsafe(16)
@@ -33,25 +35,5 @@ class WebSocketServer:
     def delete_sub(self, key):
         del self.events[key]
 
-    # Función para manejar las conexiones WebSocket
-    async def handle_connection(self, websocket):
-        # Loop principal de manejo de conexiones
-        try:
-            async for message in websocket:
-                # Parsear el mensaje recibido desde el cliente
-                data = json.loads(message)
-                match data["type"]:
-                    case "join":
-                        key = data["key"]
-                        await self.join_sub(key, websocket)
-        except websockets.exceptions.ConnectionClosedOK:
-            pass
 
-    async def main(self):
-        # Iniciar el servidor WebSocket
-        async with websockets.serve(self.handle_connection, self.host, self.port):
-            print("algo")
-            await asyncio.Future()  # Correr el servidor para siempre
-
-
-server = WebSocketServer(8765, "localhost:")
+server = SubscriptionServer()

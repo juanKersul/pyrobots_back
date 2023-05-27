@@ -2,8 +2,8 @@ from math import sqrt
 from math import degrees
 from math import atan2
 from abc import ABC, abstractmethod
-from game.math import distance, polar_to_rect, amplitude_to_depth
-from game.command import Command
+from controllers.game.math import distance, polar_to_rect, amplitude_to_depth
+from controllers.game.command import Command
 from random import randint
 
 

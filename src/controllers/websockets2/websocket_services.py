@@ -21,7 +21,6 @@ class SubscriptionServer:
         try:
             sub = self.events[key]
             sub.append(websocket)
-            print(sub)
         except KeyError:
             await websocket.send_json({"error": "No existe el evento"})
         except WebSocketDisconnect:

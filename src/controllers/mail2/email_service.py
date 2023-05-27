@@ -27,7 +27,7 @@ async def send_confirmation_mail(
         MAIL_SSL_TLS=False,
         USE_CREDENTIALS=True,
     )
-    html = open("mail2/email.html", "r")
+    html = open("controllers/mail2/email.html", "r")
     template = html.read().format(
         user=username,
         end_point_verify=code_validation)

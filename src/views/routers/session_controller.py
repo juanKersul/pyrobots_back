@@ -1,10 +1,10 @@
 from fastapi import APIRouter
 from fastapi import HTTPException
-from security.tokens import generate_token
-from security.password import decrypt_password
-from db.database import database
-from crud.user_services import check_user
-from crud.user_services import search_user
+from controllers.security.tokens import generate_token
+from controllers.security.password import decrypt_password
+from models.db.database import database
+from models.crud.user_services import check_user
+from models.crud.user_services import search_user
 
 session_end_points = APIRouter()
 

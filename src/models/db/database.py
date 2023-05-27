@@ -1,7 +1,7 @@
 from pony.orm import Database
-from db.entities import define_matches
-from db.entities import define_robots
-from db.entities import define_users
+from models.db.entities import define_matches
+from models.db.entities import define_robots
+from models.db.entities import define_users
 
 
 def define_database():

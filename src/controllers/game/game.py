@@ -1,4 +1,4 @@
-from game.Robot import GameRobot
+from controllers.game.Robot import GameRobot
 
 
 class BaseGame:

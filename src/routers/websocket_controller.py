@@ -2,8 +2,8 @@ from fastapi import WebSocket
 from fastapi import APIRouter
 from fastapi import WebSocketDisconnect
 from fastapi import Depends
-from controllers.security.tokens import authorize_token
-from controllers.websockets2.websocket_services import server
+from security.tokens import authorize_token
+from websockets2.websocket_services import server
 import json
 
 websocket_endpoints = APIRouter()

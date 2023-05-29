@@ -1,13 +1,13 @@
 from fastapi import FastAPI
-from views.routers.users_controller import user_end_points
-from views.routers.match_controller import match_end_points
-from views.routers.simulation_controller import simulation_end_points
-from views.routers.robot_controller import robot_end_points
-from views.routers.session_controller import session_end_points
+from routers.users_controller import user_end_points
+from routers.match_controller import match_end_points
+from routers.simulation_controller import simulation_end_points
+from routers.robot_controller import robot_end_points
+from routers.session_controller import session_end_points
 from fastapi.middleware.cors import CORSMiddleware
-from models.db.database import map_database
-from models.db.database import database
-from views.routers.websocket_controller import websocket_endpoints
+from db.database import map_database
+from db.database import database
+from routers.websocket_controller import websocket_endpoints
 
 # Definiendo la aplicacion
 app = FastAPI()

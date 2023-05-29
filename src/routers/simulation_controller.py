@@ -1,13 +1,13 @@
 from fastapi import APIRouter
 from fastapi import Depends
-from controllers.security.tokens import authorize_token
-from models.crud.robot_service import check_robot
+from security.tokens import authorize_token
+from crud.robot_service import check_robot
 from fastapi import HTTPException
-from controllers.file_controller.execute import execute_file
-from controllers.game.game import BaseGame
-from models.db.database import database
-from views.schemas.simulation import Simulation
-from controllers.game.Robot import Py_Robot
+from file_controller.execute import execute_file
+from game.game import BaseGame
+from db.database import database
+from schemas.simulation import Simulation
+from game.Robot import Py_Robot
 
 simulation_end_points = APIRouter()
 

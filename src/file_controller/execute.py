@@ -1,4 +1,4 @@
-from controllers.game.command import Command
+from game.command import Command
 from exceptions.classes import ObjectNotFound
 
 

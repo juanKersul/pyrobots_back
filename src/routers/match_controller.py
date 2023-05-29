@@ -1,20 +1,20 @@
 from fastapi import APIRouter
 from fastapi import HTTPException
-from models.crud.match_service import create_match
-from models.crud.match_service import add_player
-from models.crud.user_services import check_user
-from models.crud.robot_service import check_robot
-from models.crud.match_service import read_matchs
-from models.crud.match_service import check_match
-from models.crud.match_service import get_match
-from models.crud.match_service import check_match_is_full
+from crud.match_service import create_match
+from crud.match_service import add_player
+from crud.user_services import check_user
+from crud.robot_service import check_robot
+from crud.match_service import read_matchs
+from crud.match_service import check_match
+from crud.match_service import get_match
+from crud.match_service import check_match_is_full
 from fastapi import Depends
-from controllers.security.tokens import authorize_token
-from models.db.database import database
-from controllers.websockets2.websocket_services import server
-from controllers.file_controller.execute import execute_file
-from controllers.game.Robot import Py_Robot
-from controllers.game.game import BaseGame
+from security.tokens import authorize_token
+from db.database import database
+from websockets2.websocket_services import server
+from file_controller.execute import execute_file
+from game.Robot import Py_Robot
+from game.game import BaseGame
 
 match_end_points = APIRouter()
 

@@ -1,15 +1,15 @@
 from fastapi import APIRouter
 from fastapi import HTTPException
-from models.crud.user_services import add_user
-from models.crud.user_services import search_user
-from models.crud.user_services import update_confirmation
-from models.crud.user_services import check_user
-from models.crud.user_services import check_email
-from controllers.security.password import encrypt_password
-from controllers.security.validation_code import generate_validation_code
-from controllers.mail2.email_service import send_confirmation_mail
-from models.db.database import database
-from controllers.file_controller.store import create_directory
+from crud.user_services import add_user
+from crud.user_services import search_user
+from crud.user_services import update_confirmation
+from crud.user_services import check_user
+from crud.user_services import check_email
+from security.password import encrypt_password
+from security.validation_code import generate_validation_code
+from mail2.email_service import send_confirmation_mail
+from db.database import database
+from file_controller.store import create_directory
 
 user_end_points = APIRouter()
 

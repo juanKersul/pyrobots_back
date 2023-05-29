@@ -1,13 +1,13 @@
 from fastapi import APIRouter
 from fastapi import HTTPException
 from fastapi import UploadFile
-from models.crud.robot_service import read_robots
-from models.crud.robot_service import add_robot
-from models.crud.robot_service import check_robot
+from crud.robot_service import read_robots
+from crud.robot_service import add_robot
+from crud.robot_service import check_robot
 from fastapi import Depends
-from controllers.security.tokens import authorize_token
-from models.db.database import database
-from controllers.file_controller.store import save_file
+from security.tokens import authorize_token
+from db.database import database
+from file_controller.store import save_file
 
 robot_end_points = APIRouter()
 
